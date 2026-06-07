@@ -1,0 +1,221 @@
+/* =============================================================================
+   _editorial.scss — Editorial necessities (shared across templates)
+   -----------------------------------------------------------------------------
+   The home for SITE-WIDE editorial UI that isn't owned by a specific layout:
+   ads, newsletter blocks, and future additions like paywall notices, login
+   prompts, table-of-contents floaters. A single shared file keeps these
+   structural rules together and prevents the "where does .heron-ad live"
+   confusion that arose when ad CSS sat in both _builder.scss (builder widget)
+   and _single.scss (customizer slot) — the same markup needed two homes
+   because the bundles were split. Now ONE home, ONE markup contract.
+
+   Markup contract (used by inc/ads.php AND builder/widgets/ad-promo.php):
+
+     <aside class="heron-ad" aria-label="Advertisement">
+       <span class="heron-ad__label">Advertisement</span>     (optional toggle)
+       <a class="heron-ad__img" href="..." rel="sponsored noopener" style="max-width:728px">
+         <picture>
+           <source media="(max-width: 600px)" srcset="...mobile.jpg" />
+           <img src="...desktop.jpg" alt="..." loading="lazy" decoding="async" />
+         </picture>
+       </a>
+       — OR for code mode —
+       <raw ad-network HTML here, printed as-is>
+     </aside>
+
+   The shared low-level renderer is heron_ad_render() in inc/ads.php. Both
+   the Customizer ad slots and the builder Ad/Promo widget normalise their
+   inputs into the same $args array and call it.
+
+   TOC:
+      1. .heron-ad             — ad container (4 customizer positions + builder widget)
+      2. .heron-newsletter     — newsletter signup block (after-post placement)
+   ============================================================================= */
+
+@use 'mixins' as *;
+
+
+/* 1. .heron-ad — ad slot. ONE block for FIVE callers:
+   FOUR customizer-driven positions (after-header / before-post-content /
+   after-post-content / above-footer; see inc/ads.php) + the builder Ad/Promo
+   widget (builder/widgets/ad-promo.php). All share this markup contract,
+   so the CSS only needs to know about the structural shape — never which
+   caller emitted the markup.
+
+   SPACING RHYTHM — the goal is that the air ABOVE and BELOW an ad reads as
+   one system with the surrounding page. .site-main has padding-top and
+   padding-bottom; the two "edge" ad positions (after-header, above-footer)
+   sit immediately inside that padding, so their margin on the page-edge
+   side must be ZERO (otherwise it doubles with site-main's padding). On
+   the content-facing side they need a margin that MIRRORS the site-main
+   padding on the OPPOSITE edge — so the ad sits visually centred between
+   the page edge and the content. Per-surface multipliers (single post /
+   page / home) live below, mirroring the .site-main padding overrides in
+   _base.scss.
+
+   In-flow positions (before-post-content / after-post-content / builder
+   widget) get symmetric margin-block on both sides — they're surrounded by
+   article content, no page-edge padding to coexist with.
+
+   VIEWPORT CAP: handled by the .container wrapper that header.php and
+   footer.php emit around the ad. The ad itself doesn't need horizontal math. */
+
+.heron-ad {
+	text-align: center;
+
+	/* Default rhythm — applies to the in-flow positions (before/after post
+	   content + builder widget). Symmetric breathing on both sides. The two
+	   edge variants below override one side to zero. */
+	margin-block: var(--mobile-edge-spacing);   /* 10px on phone */
+
+	@include from(tablet) {
+		margin-block: calc(var(--space-unit) * 1.25);  /* 20px tablet+ */
+	}
+
+	/* Image safety nets — descendant images and iframes never overflow the
+	   column. Network ads (AdSense etc.) ship their own responsive logic;
+	   these rules catch hand-pasted creatives that would otherwise blow out
+	   on a 360px phone. */
+	img    { max-width: 100%; height: auto; }
+	iframe { max-width: 100%; }
+}
+
+/* AFTER-HEADER: sits as the first child of <main>'s first content row.
+   site-main's padding-top owns the TOP space; the ad's margin-top must be
+   zero to avoid doubling it. The BOTTOM margin mirrors site-main's
+   padding-top so the next element starts at a balanced distance. */
+.heron-ad--after-header {
+	margin-block-start: 0;
+	/* margin-block-end inherits from .heron-ad above — same value as
+	   site-main's padding-top, so the visual rhythm is symmetric. */
+}
+
+/* ABOVE-FOOTER: sits as the last child of <main>. site-main's padding-bottom
+   owns the BOTTOM space; the ad's margin-bottom must be zero. The TOP margin
+   mirrors site-main's padding-bottom — which is PER-SURFACE (single post
+   has 60px, page has 40px, baseline has 10/20). Each surface overrides the
+   top margin below to match its padding-bottom. */
+.heron-ad--above-footer {
+	margin-block-end: 0;
+	margin-block-start: var(--mobile-edge-spacing);  /* baseline phone — 10px */
+
+	@include from(tablet) {
+		margin-block-start: calc(var(--space-unit) * 1.25);  /* baseline tablet+ — 20px */
+	}
+}
+
+/* Per-surface overrides for the ABOVE-FOOTER top margin, so it mirrors the
+   site-main padding-bottom values set in _base.scss. Selector specificity
+   (0,2,0) matches the baseline above, ties broken by source order — these
+   come AFTER so they win on the surfaces they target.
+
+   Single post: site-main padding-bottom = 3.75 unit (60px) on tablet+.
+   We mirror it here so the ad sits visually centred between content body
+   and footer band, just like the after-header ad does at the top. */
+.single-post .heron-ad--above-footer {
+	@include from(tablet) {
+		margin-block-start: calc(var(--space-unit) * 3.75);
+	}
+}
+
+/* Page (real Pages, not the static front page): site-main padding-bottom
+   = 2.5 unit (40px) on tablet+. */
+.page:not(.home) .heron-ad--above-footer {
+	@include from(tablet) {
+		margin-block-start: calc(var(--space-unit) * 2.5);
+	}
+}
+
+/* Same multiplier needed on the AFTER-HEADER bottom margin for .page:not(.home),
+   because that surface has a roomier 40px padding-TOP too — the ad's bottom
+   margin should match for symmetry on the top edge. */
+.page:not(.home) .heron-ad--after-header {
+	@include from(tablet) {
+		margin-block-end: calc(var(--space-unit) * 2.5);
+	}
+}
+
+.heron-ad__label {
+	/* Disclosure ribbon above the creative ("Advertisement" / "Sponsored").
+	   Block so it always sits on its own line. Slightly smaller + dimmed
+	   versus the body type so it reads as a meta-label, not editorial copy. */
+	display: block;
+	margin-bottom: 0.4em;
+	font-size: 0.8em;
+	opacity: 0.5;
+}
+
+.heron-ad__img {
+	/* The container for the banner image (an <a> when linked, a <span> when
+	   not). Inline-block so the editor-set inline width (style="width:728px")
+	   sizes the box, and text-align:center on the parent centres it.
+	   max-width:100% caps it to the .heron-ad's available width (which is
+	   itself capped by the surrounding .container's gutter math — see the
+	   header.php / footer.php wrappers).
+	   line-height:0 kills the inline-image baseline gap. */
+	display: inline-block;
+	max-width: 100%;
+	line-height: 0;
+
+	img { display: block; width: 100%; }
+}
+
+
+/* 2. .heron-newsletter — newsletter signup block.
+   Heading + description + form (a plugin shortcode resolved at render time,
+   OR raw HTML the editor pasted from their newsletter provider). Capped to
+   --reading so the form aligns with the article body. Soft background
+   separates it from prose without competing.
+   Lives here (not _single.scss) because the same block could later be reused
+   on a /subscribe page or in a builder widget — shared editorial UI. */
+
+.heron-newsletter {
+	max-width: var(--reading);
+	margin: calc(var(--space-unit) * 2) auto;
+	padding: calc(var(--space-unit) * 1.5) var(--space-unit);
+	background-color: var(--soft-bg);
+	border-radius: var(--radius);
+	text-align: center;
+
+	/* Direct-child images (e.g. a header banner the editor added) — same
+	   safety net as the ad slot. */
+	img {
+		max-width: 100%;
+		height: auto;
+	}
+}
+
+.heron-newsletter__heading {
+	margin: 0 0 calc(var(--space-unit) * 0.5);
+}
+
+.heron-newsletter__description {
+	margin: 0 0 var(--space-unit);
+	max-width: 48ch;
+	margin-inline: auto;
+}
+
+.heron-newsletter__form {
+	/* The form's HTML/shortcode owns its own layout; we just provide a flex
+	   row when the plugin emits the typical "input + button" pair so they
+	   align cleanly without per-plugin tweaks. */
+	display: flex;
+	flex-wrap: wrap;
+	gap: calc(var(--space-unit) * 0.5);
+	justify-content: center;
+
+	/* Width safety net — providers sometimes emit forms wider than expected. */
+	form,
+	input[type="email"],
+	input[type="text"] {
+		max-width: 100%;
+	}
+
+	/* Email inputs get sensible flex growth so they fill the row up to the
+	   container width on tablet+ — a typical Mailchimp embed lays out as
+	   "[      email field      ] [submit]". */
+	input[type="email"],
+	input[type="text"] {
+		flex: 1 1 220px;
+	}
+}

@@ -1,0 +1,382 @@
+/* =============================================================================
+   _widgets.scss — Widget-shaped UI (WP core widgets + their block twins)
+   -----------------------------------------------------------------------------
+   Two surfaces:
+
+   A) The classic widget WRAPPER `.heron-widget` — the <section> our
+      register_sidebar() emits around each widget in a sidebar/footer (see
+      inc/sidebars.php). Owns: paragraph rhythm, list reset, nested-list
+      indent, the widget title.
+
+   B) Widget-shaped UI ELEMENTS that WP renders the same chaotic markup for
+      WHEREVER they land — a sidebar widget, a block placed in a post, the
+      footer, anywhere. These get FLAT rules (no .heron-widget ancestor) so
+      a Tag Cloud block dropped into a post still reads as uniform pills,
+      not a chaos of inline font-sizes. Examples: tag cloud, calendar, RSS,
+      and the list-shaped block widgets (latest-posts, latest-comments,
+      archives, categories, page-list).
+
+   This is the BASE layer — structure only. Subjective bits (widget title
+   weight/case, hover decoration, muted-meta color) live in the Concept layer
+   (see _concept-test.scss → "2.2.a widgets band"). The test for "is this
+   structural?" is in CLAUDE.md → SCSS conventions.
+
+   Heron-specific widget styles (Heron Post List, builder widgets) live with
+   their owners: post list in _archive.scss, builder widgets in _builder.scss.
+
+   TOC:
+      1. .heron-widget                — wrapper: list reset, nested list indent, paragraph rhythm
+      2. .heron-widget__title         — eyebrow + hairline divider
+      3. Tag cloud                    — .tagcloud + .wp-block-tag-cloud → uniform pills
+      4. Calendar                     — .wp-calendar-table + .wp-calendar-nav (table grid + nav row)
+      5. RSS widget                   — .rsswidget / .rss-date / .rssSummary (line separation)
+      6. Media widgets — caption      — wp-caption / figure inside widget wrapper
+      7. Block widgets — list-shaped  — latest-posts / latest-comments / archives / categories / page-list
+      8. .widget_recent_comments      — speech-bubble icon per item + author weight bump
+   ============================================================================= */
+
+@use 'mixins' as *;
+
+
+/* 1. .heron-widget — shared wrapper for any sidebar/footer widget.
+   WP core widgets emit plain <ul>s with browser-default bullets and
+   inconsistent spacing. We strip the defaults and impose one rhythm so a
+   sidebar of mixed widgets reads as one family.
+
+   These rules are SCOPED to .heron-widget on purpose — they affect lists/
+   paragraphs INSIDE a widget area only. Body content lists keep their
+   article-style bullets and rhythm (see _blocks.scss / _single.scss). */
+
+.heron-widget {
+
+	/* Paragraph rhythm inside text-like widgets (Text widget, Custom HTML,
+	   block paragraph). Without this, paragraphs collapse against the title
+	   because we reset margins elsewhere. */
+	p {
+		margin: 0 0 calc(var(--space-unit) * 0.6);
+	}
+	> *:last-child { margin-bottom: 0; }
+
+	/* List widgets — Categories, Archives, Recent Posts, Recent Comments,
+	   Meta, Pages, Nav Menu, RSS. Bullets removed (sidebar lists read as
+	   navigation, not prose). Line-height generous so each row is a clear
+	   click target. */
+	ul,
+	ol {
+		list-style: none;
+		margin: 0;
+		padding: 0;
+		line-height: 1.7;
+
+		a { text-decoration: none; color: inherit; }
+	}
+
+	/* Nested lists — Categories/Pages/Nav Menu hierarchy. WP emits children
+	   as .children (categories/pages) or .sub-menu (nav menu). Indent so the
+	   tree is readable without being deep. */
+	.children,
+	.sub-menu {
+		margin-top: calc(var(--space-unit) * 0.2);
+		padding-left: var(--space-unit);
+	}
+
+	/* Image/select inside the widget should not overflow the rail. */
+	img,
+	select {
+		max-width: 100%;
+		height: auto;
+	}
+}
+
+.widget_text a {
+	color: var(--gray);
+}
+
+
+/* 2. .heron-widget__title — the structural anchor that turns a stack of
+   links into a labeled unit. Hairline + spacing only at base; the Concept
+   layer owns the uppercase/weight/case opinion. */
+
+.heron-widget__title {
+	margin: 0 0 calc( var(--space-unit) * 1/2 );
+	padding-bottom: calc(var(--space-unit) * 0.4);
+	// border-bottom: 1px solid var(--rule);
+	// font-family: var(--heading-font);
+
+	// font-size: 0.9em;
+	// text-transform: uppercase;
+	font-size: 1.1em;
+}
+
+
+/* 3. Tag cloud — .tagcloud (classic) + .wp-block-tag-cloud (block).
+   FLAT (not nested under .heron-widget). A Tag Cloud block can be dropped
+   into a post or any template, and the inline-per-tag font-size mess is the
+   same chaos wherever it appears — we normalize globally to uniform pills.
+   The "popularity-by-size" signal is deferred to v1.1 (see memory:
+   widgets-deferred-to-v1-1). */
+
+.tagcloud,
+.wp-block-tag-cloud {
+	display: flex;
+	flex-wrap: wrap;
+	gap: calc(var(--space-unit) * 0.4);
+
+	a {
+		display: inline-block;
+		padding: 0.2em 0.7em;
+		font-size: 0.8em !important;   /* override WP's chaotic per-tag inline sizes */
+		border: 1px solid var(--rule);
+		border-radius: var(--radius-2);
+		text-decoration: none;
+		color: var(--gray);
+		&:hover {
+			background: var(--soft-bg);
+			color: inherit
+		}
+	}
+
+	/* WP emits a "(N)" suffix and/or aria-label-mirroring content; both are
+	   redundant once the cloud is a uniform pill grid. */
+	.tag-cloud-link[aria-label]::after
+	{ display: none; }
+}
+
+
+/* 4. Calendar — .widget_calendar / .wp-block-calendar.
+   FLAT. The calendar's markup is a full <table> wherever it lands; without
+   table styling it collapses into illegible inline text. Structural only:
+   borders, cell sizing, header weight, nav row alignment. No accent fills,
+   no "today" highlight color (concept layer can add). */
+
+.wp-calendar-table,
+#wp-calendar {
+	width: 100%;
+	border-collapse: collapse;
+	margin-bottom: calc(var(--space-unit) * 0.4);
+	font-size: 0.9em;
+
+	caption {
+		padding: calc(var(--space-unit) * 0.3) 0;
+		font-weight: 600;
+		text-align: center;
+	}
+
+	th,
+	td {
+		padding: calc(var(--space-unit) * 0.25);
+		border: 1px solid var(--rule);
+		text-align: center;
+	}
+
+	th {
+		background-color: var(--soft-bg);
+		font-weight: 600;
+	}
+
+	/* Cell with a link = a day that has a post. The link fills the cell so
+	   the whole square is the click target. */
+	td a {
+		display: block;
+		text-decoration: none;
+		color: inherit;
+	}
+}
+
+/* Calendar prev/next nav — emitted as a separate <nav> with two spans
+   (prev on the left, next on the right). Flex row, space-between, so the
+   two ends sit at the edges of the calendar table. */
+.wp-calendar-nav {
+	display: flex;
+	justify-content: space-between;
+	font-size: 0.9em;
+
+	a { text-decoration: none; color: inherit; }
+}
+
+
+/* 5. RSS — .widget_rss / .wp-block-rss.
+   FLAT. RSS blocks can be embedded in posts too. Markup: a feed title link
+   (.rsswidget), then for each item: another .rsswidget link, an optional
+   .rss-date, and an optional .rssSummary. By default they all run together
+   inline. We give the date + summary their own lines so each item reads as
+   title / date / summary. Color/weight are concept-layer opinions. */
+
+.widget_rss,
+.wp-block-rss {
+
+	/* Each item — the <li> wrapping title + date + summary. Spacing between
+	   items so the list isn't a wall of text. */
+	li {
+		margin-bottom: calc(var(--space-unit) * 0.6);
+	}
+
+	.rsswidget {
+		display: inline;   /* the link itself is inline; the date below is block */
+	}
+
+	.rss-date,
+	.wp-block-rss__item-publish-date {
+		display: block;
+		font-size: 0.9em;
+	}
+
+	.rssSummary,
+	.wp-block-rss__item-excerpt {
+		display: block;
+		margin-top: calc(var(--space-unit) * 0.2);
+	}
+
+	cite {
+		display: block;
+		font-size: 0.9em;
+	}
+}
+
+
+/* 6. Media widget captions — kept scoped to .heron-widget on purpose.
+   Article-body figures and galleries have their own caption treatment
+   (left-aligned italic in _single.scss). Inside a narrow widget rail we
+   want the caption centered under a smaller image — different rhythm. */
+
+.heron-widget .wp-caption,
+.heron-widget figure {
+	margin: 0 0 calc(var(--space-unit) * 0.6);
+	max-width: 100%;
+}
+
+.heron-widget .wp-caption-text,
+.heron-widget figcaption {
+	margin-top: calc(var(--space-unit) * 0.2);
+	font-size: 0.9em;
+	text-align: center;
+}
+
+.heron-widget .gallery {
+	max-width: 100%;
+}
+
+
+/* 7. Block widgets — list-shaped variants.
+   FLAT. .wp-block-latest-posts, .wp-block-latest-comments, .wp-block-archives,
+   .wp-block-categories, .wp-block-page-list. These blocks ship their own <ul>s
+   and are commonly embedded in post content (a "Related posts" Latest Posts
+   block at the end of an article, a Categories block on an index page). We
+   normalize them everywhere so they read like clean lists, not browser-
+   default bulleted prose. */
+
+.wp-block-latest-posts,
+.wp-block-latest-comments,
+.wp-block-archives,
+.wp-block-archives-list,
+.wp-block-categories,
+.wp-block-categories-list,
+.wp-block-page-list {
+	list-style: none;
+	margin: 0;
+	padding: 0;
+	line-height: 1.7;
+
+	a { text-decoration: none; color: inherit; }
+
+	li {
+		margin-bottom: calc(var(--space-unit) * 0.2);
+	}
+}
+
+/* Latest Posts — when the editor enables date / excerpt / author, each is
+   emitted as its own element. Give them their own lines + slightly smaller
+   meta so the item reads as title / meta / excerpt.
+   .widget_recent_entries .post-date is the CLASSIC widget's equivalent —
+   WP core emits <span class="post-date"> inline next to the title; we
+   block-display it to put it on its own line, same eyebrow treatment. */
+.wp-block-latest-posts__post-date,
+.wp-block-latest-posts__post-author,
+.wp-block-latest-comments__comment-date,
+.wp-block-latest-comments__comment-meta,
+.widget_recent_entries .post-date {
+	display: block;
+	font-size: 0.8em;
+	color: var(--muted-text);
+}
+
+/* Classic Recent Posts widget: extra spacing between items so the
+   title + date pair reads as one block, with a clear gap to the next post. */
+.widget_recent_entries li + li {
+	margin-top: calc(var(--space-unit) * 0.8);
+}
+
+
+/* Classic Recent Comments widget — .widget_recent_comments.
+   WP core emits:
+     <ul id="recentcomments">
+       <li class="recentcomments">
+         <span class="comment-author-link">Author</span> on
+         <a href="...">Post title</a>
+       </li>
+     </ul>
+
+   Each <li> gets a small speech-bubble icon on the left so the list reads as
+   "comments" at a glance (otherwise it looks indistinguishable from a recent-
+   posts list). The icon is a data-URI SVG sized at 1em so it scales with the
+   text. currentColor isn't reachable inside a data URI background, so the
+   icon ships in --muted-text grey (#999) — the same hue used for meta dates
+   in the other list widgets — and reads as a neutral indicator, not a chip.
+   If a Concept needs a different colour, it can override the background-image
+   with its own data URI.
+
+   .comment-author-link gets a slight weight bump so the author + post-title
+   pair reads as "person → post" rather than two equal links.
+
+   Extra spacing between items so the author+post pair reads as one block. */
+.widget_recent_comments li.recentcomments {
+	position: relative;
+	padding-left: calc(var(--space-unit) * 1.4);
+	background-image: url("data:image/svg+xml;charset=utf-8,%3Csvg xmlns='http://www.w3.org/2000/svg' width='16' height='16' viewBox='0 0 24 24' fill='none' stroke='%23999' stroke-width='2' stroke-linecap='round' stroke-linejoin='round'%3E%3Cpath d='M21 15a2 2 0 0 1-2 2H7l-4 4V5a2 2 0 0 1 2-2h14a2 2 0 0 1 2 2z'/%3E%3C/svg%3E");
+	background-repeat: no-repeat;
+	background-position: 0 0.35em;
+	background-size: 1em 1em;
+}
+
+.widget_recent_comments li.recentcomments + li.recentcomments {
+	margin-top: calc(var(--space-unit) * 0.8);
+}
+
+.widget_recent_comments .comment-author-link {
+	font-weight: 600;
+}
+
+/* Categories widget post count — wrapped in <span class="cat-count"> by the
+   wp_list_categories filter in inc/sidebars.php (WP core normally emits a
+   bare " (N)" suffix that's hard to style).
+
+   The span is a SIBLING of the <a> inside the <li>, so the <li> becomes the
+   flex row: link grows, count hugs the right edge via margin-left:auto.
+   Smaller + muted so the link stays the visual focus. */
+.widget_categories li {
+	display: flex;
+	align-items: baseline;
+	gap: calc(var(--space-unit) * 0.5);
+}
+
+.widget_categories .cat-count {
+	margin-left: auto;
+	font-size: 0.8em;
+	color: var(--muted-text);
+}
+
+.wp-block-latest-posts__post-excerpt,
+.wp-block-latest-comments__comment-excerpt {
+	margin: calc(var(--space-unit) * 0.2) 0 0;
+	font-size: 0.95em;
+}
+
+/* Latest Posts "grid" style — editor can pick is-grid. In a post body the
+   block can render up to ~6 columns via its own inline style; we don't
+   override that. Inside a narrow sidebar rail (.heron-widget) we cap to two
+   columns because more won't fit at ~240px wide. */
+.heron-widget .wp-block-latest-posts.is-grid {
+	display: grid;
+	grid-template-columns: repeat(2, 1fr);
+	gap: var(--space-unit);
+}

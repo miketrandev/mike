@@ -1,0 +1,61 @@
+/* =============================================================================
+   _mixins.scss — Breakpoints in plain English
+   =============================================================================
+   Mobile-first. Three mixins, named after what they do.
+
+   USAGE:
+     @include from(tablet)            { ... }   // applies on tablet AND wider
+     @include below(tablet)           { ... }   // applies on phones only
+     @include between(tablet, laptop) { ... }   // tablet to just-under-laptop
+
+   Size names (pick the device, not a t-shirt letter):
+     phone    — 480px
+     tablet   — 768px
+     laptop   — 1024px
+     desktop  — 1280px
+   ============================================================================= */
+
+@use 'sass:map';
+
+$sizes: (
+	'phone':   480px,
+	'tablet':  768px,
+	'laptop':  1024px,
+	'desktop': 1280px,
+);
+
+
+/* from(name) — applies at this size AND larger.
+   This is the mobile-first default — use it for desktop tweaks on top of
+   a mobile base. Example: @include from(tablet) { ... }. */
+@mixin from($name) {
+	@if map.has-key($sizes, $name) {
+		@media (min-width: map.get($sizes, $name)) {
+			@content;
+		}
+	} @else {
+		@error "Unknown size `#{$name}`. Use: #{map.keys($sizes)}.";
+	}
+}
+
+
+/* below(name) — applies UNDER this size only.
+   The -0.02px shave prevents a 1px overlap when from() and below() share
+   a size name (and dodges Safari's sub-pixel rounding bug). */
+@mixin below($name) {
+	@if map.has-key($sizes, $name) {
+		@media (max-width: (map.get($sizes, $name) - 0.02px)) {
+			@content;
+		}
+	} @else {
+		@error "Unknown size `#{$name}`. Use: #{map.keys($sizes)}.";
+	}
+}
+
+
+/* between(from, to) — applies from `from` up to just under `to`. */
+@mixin between($from, $to) {
+	@media (min-width: map.get($sizes, $from)) and (max-width: (map.get($sizes, $to) - 0.02px)) {
+		@content;
+	}
+}

@@ -1,0 +1,672 @@
+/* =============================================================================
+   _base.scss — Design tokens + element defaults + page skeleton
+   -----------------------------------------------------------------------------
+   The theme's design system + page-level defaults. Everything else in scss/
+   reads from these tokens; nothing else *defines* them. A "Concept" (future
+   feature) overrides tokens inline in <head> to retheme the whole site
+   without touching components.
+
+   DOM (this file paints):
+
+     <html>                          ← :root tokens
+       <body>                        ← font / color / bg + sticky-footer column
+         <a class="skip-link">       ← a11y
+         <header class="site-header">  ← positioning context only (look = _header.scss)
+         <main class="site-main">      ← flex:1 0 auto — pushes the footer down
+           <div class="container">   ← centered content column (curated width)
+         <footer class="site-footer">  ← look = _footer.scss
+
+   TOC:
+      1. Design tokens (:root)         — single source of truth
+      2. Body baseline                 — fonts, color, background from tokens
+      3. Dark mode token flip          — .is-dark overrides
+      4. Headings (h1–h6) + type scale — derived from --font-base
+      5. Links + focus ring            — accent color, :focus-visible
+      6. Vertical rhythm               — block element margin
+      7. Page skeleton                 — body column / .site-main / .site-header / .container
+      8. Skip link                     — a11y; visible only on focus
+      9. WordPress-required CSS hooks  — .screen-reader-text, .wp-caption, .sticky, .bypostauthor
+     10. Icons                         — .heron-icon global utility
+     11. Row primitive                 — .heron-row / .heron-col (N-column grid row)
+     12. Inputs                        — text, search, email, url, number, tel, password, textarea, select
+     13. Submit buttons                — input[type=submit] / button[type=submit] primary look
+     14. Heron button (.heron-button)  — single shared button class. Used by the header CTA,
+                                          the builder Button widget, the builder section-CTA,
+                                          and Gutenberg's wp:button block. Variants:
+                                          --primary (filled accent), --outline (border, no fill),
+                                          --black (filled dark), --text (link-style, no chrome).
+                                          Sizes: --small / --large.
+     15. Search form layout            — .search-form flex row (used everywhere get_search_form() lands)
+     16. Layout utilities              — .heron-align-center / .heron-width-reading (composable helpers)
+   ============================================================================= */
+
+@use 'mixins' as *;
+
+
+/* 1. Design tokens — the single source of truth (:root)
+   Two-layer model:
+     • Layer A — DEFAULTS (this file). The values shipped with the theme.
+     • Layer B — OVERRIDES. A Concept, the Customizer, or .is-dark writes any
+       of these tokens at runtime; everything downstream re-paints
+       automatically — no selector hunt.
+
+   Naming rule: tokens read like English nouns ('--text', '--background').
+   Aliases (like --nav-font defaulting to var(--heading-font)) let a Concept
+   break a pairing without a refactor. */
+
+:root {
+
+	/* ── Typography family tokens ──────────────────────────────────────────
+	   Default: one system-sans family across the whole site. Heading + body
+	   point at the SAME stack so the theme reads as a clean single-typeface
+	   slate; a Concept (or the customizer's typography section) splits them
+	   later. Nav is ALIASED to heading-font for the same reason.
+
+	   --button-font is ALIASED to body-font (not heading-font) so when a
+	   Concept ships a serif heading, buttons stay readable in sans. Editorial
+	   convention: buttons are sans even on serif sites (Fox, Ghost, NYT app —
+	   all do this). A Concept that wants serif buttons can override the token
+	   explicitly. */
+	--body-font:    system-ui, -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Oxygen, Ubuntu, Cantarell, 'Open Sans', 'Helvetica Neue', sans-serif;
+	--heading-font: var(--body-font);
+	--nav-font:     var(--heading-font);
+	--button-font:  var(--body-font);
+
+	/* ── Color tokens ──────────────────────────────────────────────────────
+	   --text / --background are the page's foreground & background. Picked over
+	   '--fg / --bg' (jargon) and '--ink / --paper' (cute) for plain readability.
+	   Rule: always write `background-color: var(--background)` — never the
+	   `background:` shorthand — so the token name reads obvious in context.
+
+	   --muted-text  : captions, byline meta, copyright. ~60% contrast vs --text.
+	   --rule        : hairlines (dividers, table borders, input borders).
+	   --soft-bg     : low-contrast surface fill (code blocks, table stripes,
+	                   author boxes when a Concept wants the panel back).
+	   Dark-mode equivalents are overridden in `.is-dark` below. */
+	--text:        #1a1a1a;
+	--gray: rgba(0,0,0,.5);
+	--dark-gray: rgba(0,0,0,.7);
+	--light-gray: rgba(0,0,0,.3);
+	--background:  #ffffff;
+	--accent:      #3c2fe9;
+	--accent-soft: #d0e6f5;   /* 12% accent on white — for "current page" chips, soft accent fills */
+	--muted-text:  #666666;
+	--rule:        rgba(0, 0, 0, 0.09);
+	--soft-bg:     rgba(0, 0, 0, 0.04);
+
+	/* ── Scale tokens (the Density dial multiplies these) ──────────────────
+	   Every type size & spacing in the theme derives from these two via calc(),
+	   so flipping density rescales the whole system proportionally. */
+	--font-base:  1rem;
+	--space-unit: 1rem;
+
+	/* Mobile safe-area gutter — the gap between .container's edge and the
+	   viewport edge on phones. Tighter than --space-unit because phones have
+	   less width to give away. Used by .container's mobile max-width math. */
+	--mobile-edge-spacing: 10px;
+
+	/* Mobile header bar height — single source of truth. Read by:
+	     • .header-mobile (sets its own height to this token)
+	     • body.heron-header--sticky-mobile (offsets content by this token so
+	       the fixed bar doesn't hide the first lines)
+	   Picked at 56px because that's the WCAG-recommended minimum tap height
+	   (44px) plus comfortable padding for the centered logo and the cap-edge
+	   icon buttons. Change the token here and every consumer follows. */
+	--mobile-header-height: 56px;
+
+	/* Topbar height — the thin utility strip above the masthead (secondary
+	   menu / social / date / dark toggle). Single source of truth for the
+	   strip's min-height; tweak here to thin or thicken the band. */
+	--topbar-height: 36px;
+
+	/* Off-canvas panel width — the hamburger drawer that slides in from the
+	   left. Single source of truth: change here and the panel resizes. The
+	   panel additionally caps at 80vw so it stays inside narrow viewports. */
+	--offcanvas-width: 280px;
+
+	/* ── Shape tokens ──────────────────────────────────────────────────────
+	   --shadow-card : elevation for cards & inline panels. Default is none —
+	                   base is flat; a Concept lifts cards by overriding.
+	   --shadow-elev : elevation for floating overlays (dropdowns, search panel,
+	                   autocomplete). Stronger than --shadow-card because these
+	                   need to read as ABOVE the page, not part of it. */
+	/* Radius scale — 5 levels from sharp to pill-ish. Pick by intent:
+	     --radius-0  square (default, base layer stays sharp)
+	     --radius-1  subtle (inputs, hairline chips)        — 3px
+	     --radius-2  soft   (cards, panels, buttons)        — 6px
+	     --radius-3  rounded (large cards, modals, hero)    — 10px
+	     --radius-4         pill   (icon buttons, avatar holders)  — 16px
+	     --radius-infinite  capsule (oval / fully rounded chips)   — 999px
+	   --radius (no number) is the generic alias — kept for back-compat and
+	   for the Density dial to retune in one place if needed. */
+	--radius-0: 0;
+	--radius-1: 3px;
+	--radius-2: 6px;
+	--radius-3: 10px;
+	--radius-4: 16px;
+	--radius-infinite: 999px;
+	--radius:       var(--radius-0);
+	--shadow-card:  none;
+	--shadow-elev:  0 6px 20px rgba(0, 0, 0, 0.08);
+
+	/* ── Width tokens (curated; NOT customizer options — see philosophy.md) ─
+	   --container : the centered content column max-width.
+	   --reading   : single-post body column; capped to ~65–75ch for readability
+	                 regardless of sidebar. */
+	--container: 1170px;
+	--reading:   660px;
+
+	/* ── Runtime measurement ───────────────────────────────────────────────
+	   Live header height, set by js/header-height.js on load + resize so things
+	   that sit below the header (full hero = 100vh - header) adapt to ANY
+	   header (topbar on/off, sticky, mobile wraps). 0 before JS keeps calc()
+	   valid — hero is briefly full 100vh, then corrects, no layout break. */
+	--header-height: 0px;
+}
+
+
+/* 2. Body baseline — paint from tokens. */
+
+body {
+	font-family: var(--body-font);
+	font-size:   var(--font-base);
+	line-height: 1.6;
+	color:            var(--text);
+	background-color: var(--background);
+}
+
+
+/* 3. Dark mode — a TOKEN FLIP, not a rewrite.
+   js/header.js toggles .is-dark on <html>, persisted in localStorage. Minimal
+   starter palette: flip text/background, lighten the accent for contrast.
+   Surfaces that hardcode #fff (header panels, off-canvas, dropdowns) are
+   handled in _header.scss. */
+
+.is-dark {
+	--text:        #e8e8e8;
+	--background:  #15171a;
+	--accent:      #0f81d2;
+	--accent-soft: #1a3a55;   /* 12% accent on the dark bg */
+	--muted-text:  #9a9a9a;
+	/* In light mode --rule/--soft-bg are darkening tints; in dark mode they're
+	   lightening tints. Flip the rgba base from black to white. */
+	--rule:        rgba(255, 255, 255, 0.18);
+	--soft-bg:     rgba(255, 255, 255, 0.06);
+}
+
+
+/* 4. Headings (h1–h6) + type scale.
+   All sizes derive from --font-base via calc(); the Density dial multiplies
+   the base, the whole scale moves with it. */
+
+h1, h2, h3, h4, h5, h6 {
+	font-family: var(--heading-font);
+	line-height: 1.2;
+}
+
+h1 { font-size: calc(var(--font-base) * 2.2); }
+h2 { font-size: calc(var(--font-base) * 1.8); }
+h3 { font-size: calc(var(--font-base) * 1.4); }
+h4 { font-size: calc(var(--font-base) * 1.2); }
+
+
+/* 5. Links + focus ring.
+   Browsers ship :focus-visible to distinguish keyboard from mouse focus, so
+   the ring shows for tab/arrow nav but not on click. Components may opt into
+   their own ring style; this is the floor. */
+
+a { color: var(--accent); }
+
+a:focus-visible,
+button:focus-visible,
+input:focus-visible,
+select:focus-visible,
+textarea:focus-visible,
+summary:focus-visible,
+[tabindex]:focus-visible {
+	outline: 2px solid currentColor;
+	outline-offset: 2px;
+}
+
+
+/* 6. Vertical rhythm — block elements get one --space-unit of breathing room. */
+
+p, ul, ol, figure, blockquote {
+	margin-bottom: var(--space-unit);
+}
+
+
+/* 7. Page skeleton — sticky-footer column + content container.
+   The "sticky footer" name refers to the LAYOUT PATTERN: when a page is short
+   and content doesn't fill the viewport, the footer would otherwise float
+   mid-screen. Flex-column body + flex:1 0 auto on .site-main makes the main
+   stretch to fill leftover space, pushing the footer to the bottom edge.
+   (Distinct from "sticky header" = the scroll-pin behavior in _header.scss.) */
+
+body {
+	display: flex;
+	flex-direction: column;
+	min-height: 100vh;
+
+	margin-inline: auto;
+	max-width: 2200px; // don't let it to expand infinitely
+}
+
+/* .site-main — vertical breathing room between the header band and the
+   article body, and between the article body and the footer band.
+   --------------------------------------------------------------------------
+   BASELINE — TABLET+: 20px top / 20px bottom. Tight, safe, and the right
+   answer for any surface that hasn't picked its own (CPT archives, search
+   results, 404, attachment, the homepage builder's first section which is
+   usually a hero that doesn't want top air).
+   BASELINE — PHONE: 10px top / 10px bottom — matches the 10px horizontal
+   gutter (--mobile-edge-spacing). A 20-vertical / 10-horizontal mismatch
+   reads as "too much vertical air" on a 360px screen; symmetry feels right.
+   The named overrides below (single-post, page, home) have higher specificity
+   so they keep their custom values on every viewport — only this baseline
+   tightens on phone.
+   PER-SURFACE OVERRIDES (right below) raise the values where editorial flow
+   wants more breathing — e.g. a single post wants a roomy bottom so the
+   comments → footer transition has air; a Page is short and reads better
+   symmetrically padded.
+   The selectors target WordPress's own body_class() output (single-post,
+   page, etc.) — stable since WP 3.x — so the rule chain is auditable
+   without scanning markup. Numbers are calc()-from-token so the Density
+   dial scales them; at default --space-unit (1rem = 16px) the values land
+   on the 20/40/60 grid. */
+
+.site-main {
+	flex: 1 0 auto;
+	padding-top:    var(--mobile-edge-spacing);   // 10px — phone default
+	padding-bottom: var(--mobile-edge-spacing);   // 10px — phone default
+
+	@include from(tablet) {
+		padding-top:    calc(var(--space-unit) * 1.25);   // 20px @ 1rem
+		padding-bottom: calc(var(--space-unit) * 1.25);   // 20px @ 1rem
+	}
+}
+
+// Single post — same tight top, generous bottom so the article → comments →
+// footer transition has air (the bottom is where readers EXIT the article;
+// not crowding the footer matters more than head room above the hero).
+.single-post .site-main {
+	padding-bottom: calc(var(--space-unit) * 3.75);   // 60px @ 1rem
+}
+
+// Page — symmetrical, slightly roomier than baseline. Pages are usually
+// short ("About", "Contact", "Privacy"), so a balanced vertical frame reads
+// more deliberately than a tight 20-20 with empty space below.
+//
+// :not(.home) — exclude the static front page. WP's body_class() puts BOTH
+// `home` and `page` on a static front page that's set as the homepage, so a
+// bare `.page` selector would fire on the homepage builder and give it 40-40
+// instead of the baseline 20-20. The static homepage is editorially distinct
+// from a regular Page (it's the builder surface, not "About"); it inherits
+// the baseline naturally with this exclusion. The blog-index homepage isn't
+// affected — its body has `.home .blog`, no `.page`.
+.page:not(.home) .site-main {
+	padding-top:    calc(var(--space-unit) * 2.5);    // 40px @ 1rem
+	padding-bottom: calc(var(--space-unit) * 2.5);    // 40px @ 1rem
+}
+
+/* Positioning context for the header's absolutely-positioned overlays. */
+.site-header {
+	position: relative;
+}
+
+/* .container — centered content column.
+   Full curated width (--container); on narrow viewports shrinks to
+   (parent − gutter) so content never kisses the edge. No padding; safe-area
+   gutter is realized as the container being NARROWER, not via inset padding. */
+.container {
+	width: var(--container);
+	max-width: calc(100% - var(--mobile-edge-spacing) * 2);  /* phone gutter */
+	margin-inline: auto;
+
+	@include from(tablet) {
+		max-width: calc(100% - var(--space-unit) * 3);
+	}
+}
+
+
+/* 8. Skip link — visible only on focus (a11y).
+   Hidden off-screen by default; teleports back into view on keyboard focus
+   so screen-reader / keyboard-only users can jump past the header. */
+
+.skip-link {
+	position: absolute;
+	left: -9999px;
+}
+
+.skip-link:focus {
+	left: var(--space-unit);
+	top:  var(--space-unit);
+	z-index: 100;
+	padding: 0.5em 1em;
+	background: #fff;
+	color: #000;
+}
+
+
+/* 9. WordPress-required CSS class hooks.
+   Standard utility classes WP generates that every theme must style. Listed
+   in the WP Theme Handbook ("Required CSS Classes"). Kept here because they
+   are functional, not decorative — accessibility + alignment helpers the
+   editor relies on. */
+
+/* .screen-reader-text — visually hide content while keeping it in the a11y
+   tree. The canonical WP recipe (block-element clip, not display:none which
+   removes from screen readers). */
+.screen-reader-text {
+	border: 0;
+	clip: rect(1px, 1px, 1px, 1px);
+	clip-path: inset(50%);
+	height: 1px;
+	margin: -1px;
+	overflow: hidden;
+	padding: 0;
+	position: absolute;
+	width: 1px;
+	white-space: nowrap;
+	word-wrap: normal;
+}
+.screen-reader-text:focus {
+	background-color: #fff;
+	clip: auto;
+	clip-path: none;
+	color: #000;
+	display: block;
+	font-size: 1rem;
+	height: auto;
+	left: var(--space-unit);
+	padding: 0.5em 1em;
+	top: var(--space-unit);
+	width: auto;
+	z-index: 100000;
+}
+
+/* .wp-caption / .wp-caption-text — classic-editor caption wrapper (older
+   posts and the [caption] shortcode). New posts use <figure><figcaption> via
+   the block editor (already styled in _blocks.scss). Both share the same
+   look: centred caption text under the media. */
+.wp-caption {
+	max-width: 100%;
+	margin-bottom: var(--space-unit);
+
+	img {
+		display: block;
+		max-width: 100%;
+		height: auto;
+	}
+}
+.wp-caption-text,
+.gallery-caption {
+	margin-block-start: calc(var(--space-unit) * 0.4);
+	text-align: center;
+	font-size: 0.9em;
+}
+
+/* .sticky — a pinned blog post. Heron does not paint a chip/banner in the
+   base layer (concept territory); the class hook is preserved so a Concept
+   can add it. The default just declares the selector so theme-check is
+   satisfied AND the class is reachable for child themes. */
+.sticky {
+	/* concept-layer decoration (badge, accent rule, etc.) lives here. */
+}
+
+/* .bypostauthor — comment posted by the post's own author. Same stance as
+   .sticky: hook is preserved, decoration is concept-layer. */
+.bypostauthor {
+	/* concept-layer (e.g. accent rule on the comment block) lives here. */
+}
+
+
+/* 10. Icons — .heron-icon global utility.
+   Every SVG icon (heron_icon() in inc/icons.php) renders with this class.
+   Used across header, footer, social row, buttons, archive cards. */
+
+.heron-icon {
+	display: inline-block;
+	vertical-align: middle;
+	flex: none;
+}
+
+
+/* 11. Row primitive — .heron-row / .heron-col
+   N-column grid row used by the header (topbar's 5-track row, mobile bar's
+   6-cell hamburger · logo · search). Track count is set via the
+   --heron-row-cols CSS var that modifier classes write. Cells span columns
+   via .heron-col--{n} and align content via .heron-col--{start|center|end}. */
+
+.heron-row {
+	display: grid;
+	grid-template-columns: repeat(var(--heron-row-cols, 5), 1fr);
+	align-items: center;
+	gap: calc(var(--space-unit) * 1.2);
+}
+
+.heron-row--1 { --heron-row-cols: 1; }
+.heron-row--2 { --heron-row-cols: 2; }
+.heron-row--3 { --heron-row-cols: 3; }
+.heron-row--4 { --heron-row-cols: 4; }
+.heron-row--5 { --heron-row-cols: 5; }
+.heron-row--6 { --heron-row-cols: 6; }
+
+.heron-col {
+	display: flex;
+	align-items: center;
+	gap: calc(var(--space-unit) * 1.2);
+	min-width: 0;
+}
+
+.heron-col--1 { grid-column: span 1; }
+.heron-col--2 { grid-column: span 2; }
+.heron-col--3 { grid-column: span 3; }
+.heron-col--4 { grid-column: span 4; }
+.heron-col--5 { grid-column: span 5; }
+.heron-col--6 { grid-column: span 6; }
+
+.heron-col--start  { justify-content: flex-start; }
+.heron-col--center { justify-content: center; }
+.heron-col--end    { justify-content: flex-end; }
+
+
+/* 12. Inputs — ONE rule for every text-like control.
+   The `width: 100%` is NOT here — it's set by the surrounding component
+   (the header search panel wants its input to fill; an inline search widget
+   might not). Width is layout, not form look. */
+
+input[type="text"],
+input[type="search"],
+input[type="email"],
+input[type="url"],
+input[type="tel"],
+input[type="number"],
+input[type="password"],
+input:not([type]),
+textarea,
+select {
+	padding: calc(var(--space-unit) * 0.5) calc(var(--space-unit) * 0.7);
+	color: inherit;
+	background-color: var(--background);
+	border: 1px solid var(--rule);
+	border-radius: var(--radius);
+	font: inherit;
+	line-height: 1.4;
+
+	&::placeholder {
+		opacity: 1; // Firefox sets placeholder opacity < 1 by default; color is concept layer
+	}
+
+	&:focus-visible {
+		outline: 2px solid currentColor;
+		outline-offset: 0;
+	}
+}
+
+textarea {
+	min-height: calc(var(--space-unit) * 6);
+	resize: vertical;
+}
+
+
+/* 13. Submit buttons — form submit / "submit-like" action buttons.
+   Bare `<button>` is left to the UA + the icon-button family in _header.scss
+   (those are affordances, not form buttons). [type=submit] is the rule of
+   thumb — any form button that submits OR replaces a submit gets this look.
+   `.heron-button` is excluded — it has its own variant system in section 14. */
+   
+
+input[type="submit"],
+button[type="submit"],
+input[type="button"]:not(.heron-button) {
+	display: inline-flex;
+	align-items: center;
+	justify-content: center;
+	padding: calc(var(--space-unit) * 0.5) calc(var(--space-unit) * 1.1);
+	color: #fff;
+	background-color: var(--accent);
+	border: 0;
+	border-radius: var(--radius);
+	font: inherit;
+	line-height: 1.2;
+	cursor: pointer;
+
+	&:focus-visible {
+		outline: 2px solid currentColor;
+		outline-offset: 2px;
+	}
+
+	&:disabled {
+		opacity: 0.5;
+		cursor: not-allowed;
+	}
+}
+
+
+/* 14. Heron button — ONE shared button class for every CTA on the site.
+   Used by:
+     • header CTAs            (inc/header.php → heron_header_buttons())
+     • builder Button widget  (builder/core/render.php, button widget)
+     • builder section-CTA    (builder/core/render.php → heron_section_footer_button())
+     • Gutenberg wp:button    (grouped selector — same look, Gutenberg's
+                               own .wp-block-button__link class stays in markup
+                               because Gutenberg emits it; we just match it.)
+
+   Variants: pick by intent, not by color.
+     --primary  filled accent (default emphasis)
+     --outline  bordered, transparent fill
+     --black    filled dark (high-contrast alternative to primary)
+     --text     link-styled, no chrome (the editorial "view all →")
+
+   Sizes: --small / --large. No size class = the default.
+
+   Font family reads --button-font (aliased to --body-font in § 1) so buttons
+   stay sans even when a Concept ships a serif heading. A Concept that
+   genuinely wants serif buttons overrides --button-font explicitly. */
+
+.heron-button,
+.wp-block-button__link {
+	display: inline-flex;
+	align-items: center;
+	justify-content: center;
+	padding: calc(var(--space-unit) * 0.4) calc(var(--space-unit) * 0.95);
+	font-family: var(--button-font);
+	font-size: calc(var(--font-base) * 0.9);
+	font-weight: 600;
+	line-height: 1.2;
+	text-decoration: none;
+	border: 1px solid transparent;
+	border-radius: var(--radius-1);
+	cursor: pointer;
+
+	&:focus-visible {
+		outline: 2px solid currentColor;
+		outline-offset: 2px;
+	}
+}
+
+.heron-button--primary,
+.wp-block-button__link {
+	background-color: var(--accent);
+	color: #fff;
+}
+
+.heron-button--outline,
+.wp-block-button.is-style-outline .wp-block-button__link {
+	background-color: transparent;
+	border-color: currentColor;
+}
+
+.heron-button--black {
+	background-color: var(--text);
+	color: var(--background);
+}
+
+.heron-button--text {
+	padding-inline: 0;
+	background-color: transparent;
+	border-color: transparent;
+}
+
+.heron-button--small {
+	padding: calc(var(--space-unit) * 0.3) calc(var(--space-unit) * 0.75);
+	font-size: calc(var(--font-base) * 0.8);
+}
+
+.heron-button--large {
+	padding: calc(var(--space-unit) * 0.6) calc(var(--space-unit) * 1.3);
+	font-size: var(--font-base);
+}
+
+
+/* 15. Search form layout — .search-form (cross-surface).
+   searchform.php outputs the same markup whether it's rendered in the header
+   reveal panel, the sidebar widget, the search block, or the search results
+   page. ONE flex layout so it doesn't look broken in any placement.
+   Per-surface tweaks live in the surrounding component. */
+
+.search-form {
+	display: flex;
+	align-items: stretch;
+	gap: calc(var(--space-unit) * 0.4);
+
+	/* The <label> wrapping the input has no semantic spacing — collapse it. */
+	label {
+		flex: 1 1 auto;
+		min-width: 0;
+		margin: 0;
+	}
+
+	.search-field {
+		width: 100%;
+	}
+
+	.search-submit {
+		flex: 0 0 auto;
+	}
+}
+
+
+/* 16. Layout utilities — small composable helpers.
+   Stay structural (base layer): they set alignment and width caps only — no
+   colors, no font opinions. Composed onto any block that needs to read at
+   reading-measure and/or centered (archive headers, page intros, etc.).
+
+   .heron-align-center  : center inline content (text) AND center the block
+                          itself via margin-inline:auto. Combines the two
+                          common "make this column read centered" needs in
+                          one class so consumers don't reach for two.
+   .heron-width-reading : cap max-width at --reading (~660px) for comfortable
+                          line length. max-width:100% guard means it never
+                          forces overflow inside narrow parents. */
+
+.heron-align-center {
+	text-align: center;
+	margin-inline: auto;
+}
+
+.heron-width-reading {
+	max-width: var(--reading);
+	width: 100%;
+}

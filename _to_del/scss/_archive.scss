@@ -1,0 +1,416 @@
+/* =============================================================================
+   _archive.scss — Archive + search pages + the shared card display system
+   -----------------------------------------------------------------------------
+   Scope: the chrome shown by category / tag / date / author archives + search
+   results, AND the card display system that paints the loop items themselves
+   (.heron-card and its containers .heron-grid / .heron-list / .heron-postlist).
+
+   The card system lives here because an archive IS a list of cards — the
+   canonical use. Single-post related posts and homepage builder widgets reuse
+   the same primitives.
+
+   TOC:
+      1. .archive-header — page signage (title, description, author bio)
+      2. .pagination — chips for the_posts_pagination()
+      3. .heron-card — the one post card; styles + meta + thumb
+      4. .heron-grid — responsive N-column card grid
+      5. .heron-list — vertical stack of cards
+      6. .heron-postlist — compact rail-sized list (Heron Post List widget)
+      7. .heron-search-page — search results template (reading-width, SERP-style rows)
+   ============================================================================= */
+
+@use 'mixins' as *;
+
+
+/* 1. .archive-header
+   Signage at the top of any archive: title, optional description. Author
+   archives upgrade the markup to include the author's avatar + bio so the
+   page reads as "you're reading articles by THIS person". */
+
+.archive-header {
+	margin-block-end: calc(var(--space-unit) * 2);
+	padding-bottom: calc(var(--space-unit) * 2);
+	border-bottom: 1px solid var(--rule);
+}
+
+.archive-title {
+	margin: 0 0 calc(var(--space-unit) * 0.1);
+	font-size: 2.2em;
+}
+.archive-description {
+	p {
+		margin: 0;
+	}
+}
+
+/* .archive-description: no rules. Width cap lives on the parent
+   .archive-header via the .heron-width-reading utility (_base.scss § 16).
+   Author-archive variant uses the shared .heron-authorbox primitive
+   (.heron-authorbox--lg) — see _single.scss § 5. */
+
+
+/* 2. .pagination
+   Chips for the_posts_pagination(). Native WP markup:
+     <nav.pagination><div.nav-links><a/span.page-numbers>
+   Current-page distinction (filled chip / bold / underline) is concept-layer. */
+
+.pagination {
+	margin-top: calc(var(--space-unit) * 2);
+}
+
+.pagination .nav-links {
+	display: flex;
+	flex-wrap: wrap;
+	gap: calc(var(--space-unit) * 0.4);
+	align-items: center;
+}
+
+.pagination .page-numbers {
+	display: inline-flex;
+	align-items: center;
+	justify-content: center;
+	min-width: 2.5em;
+	padding: 0.4em 0.7em;
+	border: 1px solid var(--rule);
+	border-radius: var(--radius);
+	text-decoration: none;
+	line-height: 1;
+}
+
+/* The "…" gap is plain text, not a chip. */
+.pagination .page-numbers.dots {
+	border-color: transparent;
+	padding-inline: 0.3em;
+}
+
+
+/* 3. .heron-card — the one post card
+   Single source of truth for "a post card". Used by archive/search loops,
+   homepage builder widgets, related posts on single. Card STYLES (standard /
+   overlay / compact / list-row) and the inner element helpers (thumb, cat,
+   title, excerpt, meta, author, caption, avatar) all live here. */
+
+/* <figure>: a plain block (reset UA margin). The IMAGE LINK inside owns the
+   aspect-ratio + clipping, so a <figcaption> below it is NOT clipped (the
+   bug: ratio + overflow:hidden on the figure cut the caption out of view). */
+.heron-card__thumb {
+	display: block;
+	margin: 0;
+}
+
+/* The image box: aspect-ratio is set inline here; clip the cropped image. */
+.heron-card__thumb-link {
+	display: block;
+	overflow: hidden;
+
+	img { width: 100%; height: 100%; object-fit: cover; display: block; }
+}
+
+/* Category kicker wrapper. A post can be in multiple categories — render
+   them all, inline with a small gap. Wrap to a second line on narrow cards
+   rather than truncating. Spacing/separator-dot is concept layer. */
+.heron-card__cats {
+	display: flex;
+	flex-wrap: wrap;
+	gap: 0.15em 0.6em;
+	margin-bottom: 0.3em;
+	font-size: 0.7em;
+	text-transform: uppercase;
+
+	a {
+		font-weight: 600;
+	}
+}
+
+/* Category kicker (one per category). Size/uppercase/color is concept layer. */
+.heron-card__cat {
+	text-decoration: none;
+}
+
+.heron-card__title {
+	margin: 0.15em 0 0.15em;
+	font-family: var(--heading-font);
+	line-height: 1.25;
+	/* Break extreme unbreakable strings (long URLs, long place names) so a
+	   single token never blows the column wide. */
+	overflow-wrap: break-word;
+	word-break: break-word;
+
+	a { text-decoration: none; color: inherit; }
+}
+
+.heron-card__excerpt {
+	margin: 0.2em 0 0;
+	overflow-wrap: break-word;
+	word-break: break-word;
+
+	font-size: 0.9em;
+	color: var(--dark-gray);
+}
+
+/* Byline · date row. Color/size is concept layer. */
+.heron-card__meta {
+	display: flex;
+	flex-wrap: wrap;
+	align-items: center;
+	gap: 0.25em;
+
+	margin: 1em 0 0;
+
+	color: var(--gray);
+	font-size: 0.9em;
+
+	a:hover {
+		color: var(--text);
+	}
+}
+.heron-card__sep { /* color/opacity concept layer */ 
+	opacity: 0.5;
+	font-size: 0.5em;
+	margin: 0 .4em;
+}
+
+/* Byline: one or more author links. Plain text → comma-separated (the sep
+   span owns spacing). With avatars → no comma; chips spaced by the gap. */
+.heron-card__authors {
+	display: inline-flex;
+	flex-wrap: wrap;
+	align-items: center;
+}
+
+.heron-card__authors--avatars { gap: 0.2em 0.8em; }
+
+/* Each author link: avatar + name kept INLINE and vertically centered. */
+.heron-card__author {
+	display: inline-flex;
+	align-items: center;
+	gap: 0.4em;
+	text-decoration: none;
+	color: inherit;
+}
+.heron-card__author-sep { /* color/opacity concept layer */ }
+
+/* Thumbnail caption (Display tab option). Size/opacity is concept layer. */
+.heron-card__caption {
+	margin: 0.3em 0 0;
+}
+
+/* Author avatar in a card byline. Avatars are semantically photos-of-people —
+   they default to circles regardless of the theme's --radius. */
+.heron-card__avatar {
+	display: block;
+	width: 32px;
+	height: 32px;
+	border-radius: 50%;
+	object-fit: cover;
+}
+
+/* Card style: standard — image-top, text below (default). */
+.heron-card--standard {
+	.heron-card__body { padding-top: 0.6em; }
+}
+
+/* Card style: overlay — text over the image. */
+.heron-card--overlay {
+	position: relative;
+
+	.heron-card__thumb::after {
+		content: "";
+		position: absolute;
+		inset: 0;
+		background: linear-gradient(transparent 30%, rgba(0,0,0,0.7));
+	}
+
+	/* No image: keep the overlay shape with a solid backdrop so white text
+	   stays readable. */
+	.heron-card__thumb--empty {
+		background: #1d2327;
+	}
+	.heron-card__body {
+		position: absolute;
+		inset-inline: 0;
+		bottom: 0;
+		padding: var(--space-unit);
+		color: #fff;
+	}
+	.heron-card__title a { color: #fff; }
+	.heron-card__cat { color: #fff; }
+}
+
+/* Card style: compact — small thumb + title, no excerpt. */
+.heron-card--compact {
+	display: flex;
+	gap: 0.8em;
+	align-items: flex-start;
+
+	.heron-card__thumb { flex: 0 0 84px; }
+	.heron-card__body  { flex: 1 1 auto; }
+	.heron-card__title { margin: 0; }
+}
+
+/* Card style: list-row — horizontal thumb beside text. */
+.heron-card--list-row {
+	display: flex;
+	gap: calc( var(--space-unit) * 1.8 );
+	align-items: center;
+
+	.heron-card__thumb { flex: 0 0 38%; max-width: 240px; }
+	.heron-card__body  { flex: 1 1 auto; }
+}
+
+
+/* 4. .heron-grid — responsive N-column card grid
+   Used by archive grid, search, builder post-grid widget, builder authors
+   widget. Columns + gap set inline via CSS vars (--cols-d/-t/-m, --gap). */
+
+.heron-grid {
+	display: grid;
+	gap: var(--gap, calc(var(--space-unit) * 1.2));
+	grid-template-columns: repeat(var(--cols-m, 1), 1fr);
+
+	@include from(phone)  { grid-template-columns: repeat(var(--cols-t, 2), 1fr); }
+	@include from(laptop) { grid-template-columns: repeat(var(--cols-d, 3), 1fr); }
+
+	/* Grid items default to min-width:auto, meaning they refuse to shrink
+	   below their content's intrinsic width. min-width:0 forces the column to
+	   honor the 1fr split; overflow-wrap on the title/excerpt then breaks any
+	   long token visually inside the cell. */
+	> * { min-width: 0; }
+}
+
+/* Hero modifier — marks the lead story in a grid or list. Visual emphasis
+   is concept layer; base just tightens the headline line-height. */
+.heron-grid--hero,
+.heron-list--hero {
+	.heron-card__title { line-height: 1.12; }
+}
+
+
+/* 5. .heron-list — vertical stack of cards
+   Used by archive list view, search, builder post-list and hero widgets. */
+
+.heron-list {
+	display: grid;
+	gap: var(--gap, calc( var(--space-unit) * 2 ) );
+
+	.heron-card__title {
+		font-size: 1.5em;
+	}
+}
+
+/* Thumb on the right: move the IMAGE only (via order), leave the text block
+   where it is so copy stays left-aligned. */
+.heron-list--thumb-right .heron-card--list-row,
+.heron-list--thumb-right .heron-card--compact {
+	.heron-card__thumb { order: 2; }
+	.heron-card__body  { order: 1; text-align: left; }
+}
+
+/* Split hero: a list-row whose thumb is a true ~50%, stacking under the
+   headline only on phones.
+
+   RESPONSIVE STRATEGY:
+   - Phones (< tablet, < 768px): stacked vertically. 50/50 doesn't fit a
+     phone's width, and the image is the lead element of a hero so it
+     belongs at the top.
+   - Tablet and up (≥ 768px): side-by-side 50/50. This matches what the
+     editor expects when they pick "split" — the lead-story shape, visible
+     at the customizer preview's typical pane widths (the preview is
+     always narrower than the actual viewport) and at every reading
+     viewport.
+
+   We deliberately don't add a min-width floor on the body for narrow
+   containers (sidebar layouts). The editor chooses the headline length;
+   if it wraps awkwardly when the hero is jammed into a narrow column,
+   that's an editorial signal — shorten the headline or don't use split
+   in a sidebar layout. Theme over-protection (a forced body min-width
+   that imbalances the 50/50) was the wrong call.
+
+   align-items: center sits the text block at the image's vertical midpoint
+   — the editor's choice for the lead-story hero shape (unified band rather
+   than text-anchored-to-image-top). */
+.heron-list--hero .heron-card--list-row {
+	gap: calc(var(--space-unit) * 1.6);
+	align-items: center;
+
+	/* Mobile-first default: stacked vertically. flex still applies (inherited
+	   from .heron-card--list-row), flex-direction:column makes it a vertical
+	   stack. We force order:0/1 explicitly so a thumb_side:right choice —
+	   which sets order:2/1 via the .heron-list--thumb-right rule above —
+	   can't put the image BELOW the headline on phones. A hero's lead
+	   element is the image; on phones it must come first. The thumb-on-right
+	   preference is re-applied from tablet up. */
+	flex-direction: column;
+	.heron-card__thumb { width: 100%; max-width: none; flex: 0 0 auto; order: 0; }
+	.heron-card__body  { margin-top: var(--space-unit); order: 1; }
+
+	/* From tablet up: side-by-side 50/50. */
+	@include from(tablet) {
+		flex-direction: row;
+
+		.heron-card__thumb {
+			flex: 1 1 50%;
+			max-width: 50%;
+			width: auto;
+		}
+		.heron-card__body {
+			flex: 1 1 50%;
+			margin-top: 0;
+		}
+	}
+}
+
+/* Hero + thumb-on-right: re-apply the side-by-side reorder. The base
+   .heron-list--thumb-right rule above sets order:2/1, but the hero rule
+   forces order:0/1 to fix the mobile lead-element problem — which would
+   otherwise kill thumb-right at all widths. This combined-class selector
+   restores thumb-right from tablet up, where side-by-side is active. */
+@include from(tablet) {
+	.heron-list--hero.heron-list--thumb-right .heron-card--list-row {
+		.heron-card__thumb { order: 2; }
+		.heron-card__body  { order: 1; }
+	}
+}
+
+
+/* 6. .heron-postlist — compact rail-sized list (Heron Post List widget)
+   Used by inc/widget-post-list.php. Reuses .heron-card--compact rows with a
+   tighter thumb size suited to a sidebar rail. */
+
+.heron-postlist {
+	display: grid;
+	gap: var(--space-unit);
+}
+
+.heron-postlist__item {
+	/* Tighter than the builder's 84px — this rides in narrow rails. */
+	.heron-card__thumb { flex: 0 0 64px; }
+}
+
+
+/* 7. .heron-search-page — search results TEMPLATE wrapper
+   Reading-width, SERP-style rows: small square thumbnail, tight type, lots of
+   scannable rows per viewport. Deliberately NOT the archive list-row (which is
+   editorial — 38%-wide thumb, big ratio). Visitors come to /?s= to FIND
+   something; show many candidates fast.
+
+   Naming note: distinct from .heron-search-form (the search FORM component
+   used by searchform.php — header, footer, sidebar) and .heron-search-suggest
+   (the JS-built autocomplete dropdown). Page-level wrapper here. */
+
+.heron-search-page {
+	/* Cap the whole results column at the reading measure — same width as a
+	   single article. The .container max-width (calc(100% - …)) still applies
+	   on small viewports; --reading kicks in once the viewport allows. */
+	max-width: var(--reading);
+}
+
+.heron-search-results .heron-card--list-row {
+	/* Override the archive list-row's 38% / 240px thumb with a fixed 88px
+	   square — Google-style, predictable scan column, ignores the archive
+	   ratio setting. */
+	.heron-card__thumb {
+		flex: 0 0 88px;
+		max-width: 88px;
+	}
+}
