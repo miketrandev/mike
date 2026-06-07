@@ -1,5 +1,6 @@
 # Scratch / reference dirs not meant to ship
 ref/
+dev/
 
 # Build output
 mike-v*.zip

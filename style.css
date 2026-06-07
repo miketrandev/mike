@@ -5,14 +5,14 @@ Theme URI: https://miketran.net
 Author: Mike
 Author URI: https://miketran.net
 Description: Mike is a personal & blog wordpress theme with minimalist style, zero js, loads ultra fast
-Requires at least: 6.0
+Requires at least: 7.0
 Tested up to: 7.0
 Requires PHP: 7.4
 Version: 1.0
 License: GNU General Public License v2 or later
 License URI: https://www.gnu.org/licenses/gpl-2.0.html
 Text Domain: mike
-Tags: blog, custom-logo, custom-menu, featured-images, threaded-comments, translation-ready, two-columns, three-columns, right-sidebar, left-sidebar
+Tags: blog, custom-logo, custom-menu, featured-images, threaded-comments, translation-ready
 */
 /* =============================================================================
    _mixins.scss — Breakpoints in plain English
