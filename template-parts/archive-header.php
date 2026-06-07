@@ -58,8 +58,9 @@ if ( ! $mike_title ) {
 	<?php endif; ?>
 
 	<?php
-	// Search/404 run an empty loop — give visitors a way out.
-	if ( is_search() || is_404() ) {
+	// 404 runs an empty loop — give visitors a way out. Not on search:
+	// the searcher already has a form in the header.
+	if ( is_404() ) {
 		get_search_form();
 	}
 	?>

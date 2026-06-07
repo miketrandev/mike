@@ -13,26 +13,30 @@ if ( ! defined( 'ABSPATH' ) ) {
 	exit;
 }
 
-$mike_thumb = mike_get_thumbnail( get_the_ID(), 'medium' );
+$mike_thumb = mike_get_thumbnail( get_the_ID(), 'large' );
 ?>
 
 <article id="post-<?php the_ID(); ?>" <?php post_class( 'mike-entry' ); ?>>
 
-	<?php if ( $mike_thumb ) : ?>
-		<a class="entry-thumbnail" href="<?php the_permalink(); ?>" tabindex="-1" aria-hidden="true">
-			<?php echo wp_kses_post( $mike_thumb ); ?>
-		</a>
-	<?php endif; ?>
-
 	<div class="entry-body">
 
-		<h2 class="entry-title">
-			<a href="<?php the_permalink(); ?>"><?php the_title(); ?></a>
-		</h2>
+		<?php if ( $mike_thumb ) : ?>
+			<a class="entry-thumbnail" href="<?php the_permalink(); ?>" tabindex="-1" aria-hidden="true">
+				<?php echo wp_kses_post( $mike_thumb ); ?>
+			</a>
+		<?php endif; ?>
 
-		<div class="entry-summary"><?php the_excerpt(); ?></div>
+		<div class="entry-text">
 
-		<?php mike_entry_meta(); ?>
+			<h2 class="entry-title">
+				<a href="<?php the_permalink(); ?>"><?php the_title(); ?></a>
+			</h2>
+
+			<div class="entry-summary"><?php the_excerpt(); ?></div>
+
+			<?php mike_entry_meta(); ?>
+
+		</div><!-- .entry-text -->
 
 	</div><!-- .entry-body -->
 

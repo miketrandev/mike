@@ -7,10 +7,11 @@
  * 1. Theme Setup
  * 2. Enqueue Styles
  * 3. Enqueue comment-reply.js
- * 4. Template Tags       → inc/template-tags.php
- * 5. Template Functions  → inc/template-functions.php
- * 6. Admin               → inc/admin.php
- * 7. Customizer          → inc/customizer.php
+ * 4. Icons               → inc/icons.php
+ * 5. Template Tags       → inc/template-tags.php
+ * 6. Template Functions  → inc/template-functions.php
+ * 7. Admin               → inc/admin.php
+ * 8. Customizer          → inc/customizer.php
  *
  * @package Mike
  */
@@ -61,6 +62,7 @@ if ( ! function_exists( 'mike_setup' ) ) :
 		// Modern Gutenberg flags expected of every contemporary classic theme.
 		add_theme_support( 'wp-block-styles' );
 		add_theme_support( 'responsive-embeds' );
+			add_theme_support( 'align-wide' );
 		add_theme_support( 'html5', array(
 			'search-form',
 			'comment-form',
@@ -99,6 +101,11 @@ if ( ! function_exists( 'mike_load_scripts' ) ) :
 	}
 	add_action( 'wp_enqueue_scripts', 'mike_load_scripts' );
 endif;
+
+/* ICONS
+------------------------------------------------ */
+
+require get_template_directory() . '/inc/icons.php';
 
 /* TEMPLATE TAGS
 ------------------------------------------------ */

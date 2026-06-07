@@ -42,6 +42,34 @@ if ( ! function_exists( 'mike_header_primary_menu' ) ) :
 	}
 endif;
 
+if ( ! function_exists( 'mike_offcanvas_menu' ) ) :
+	/**
+	 * The same primary menu, rendered stacked for the off-canvas panel. Returns ''
+	 * when no menu is assigned. Memoized via static $html.
+	 */
+	function mike_offcanvas_menu() {
+		static $html = null;
+		if ( null !== $html ) {
+			return $html;
+		}
+		if ( ! has_nav_menu( 'primary-menu' ) ) {
+			$html = '';
+			return $html;
+		}
+		$html = wp_nav_menu( array(
+			'theme_location'       => 'primary-menu',
+			'menu_class'           => 'menu offcanvas-menu',
+			'container'            => 'nav',
+			'container_class'      => 'offcanvas-nav',
+			'container_aria_label' => esc_attr__( 'Mobile menu', 'mike' ),
+			'depth'                => 4,
+			'fallback_cb'          => false,
+			'echo'                 => false,
+		) );
+		return $html;
+	}
+endif;
+
 if ( ! function_exists( 'mike_single_tags' ) ) :
 	/** The tag list below the content. Suppresses off a type without tags / when none. */
 	function mike_single_tags( $post_id = null ) {
@@ -100,8 +128,26 @@ if ( ! function_exists( 'mike_entry_date' ) ) :
 	}
 endif;
 
+if ( ! function_exists( 'mike_entry_comments' ) ) :
+	/** Comment icon + count, linking to the comments. Hidden when there are none. */
+	function mike_entry_comments( $post_id = null ) {
+		$post_id = $post_id ? $post_id : get_the_ID();
+		$count   = (int) get_comments_number( $post_id );
+		if ( $count < 1 ) {
+			return;
+		}
+		printf(
+			'<a class="entry-comments" href="%s">',
+			esc_url( get_comments_link( $post_id ) )
+		);
+		mike_icon( 'comment', array( 'size' => 15 ) );
+		echo '<span class="entry-comments__count">' . esc_html( number_format_i18n( $count ) ) . '</span>';
+		echo '</a>';
+	}
+endif;
+
 if ( ! function_exists( 'mike_entry_meta' ) ) :
-	/** Categories + date wrapper above the title. Posts only. */
+	/** Categories + date + comment count wrapper above the title. Posts only. */
 	function mike_entry_meta( $post_id = null ) {
 		$post_id = $post_id ? $post_id : get_the_ID();
 		if ( 'post' !== get_post_type( $post_id ) ) {
@@ -110,6 +156,7 @@ if ( ! function_exists( 'mike_entry_meta' ) ) :
 		echo '<div class="entry-meta">';
 		mike_entry_categories( $post_id );
 		mike_entry_date( $post_id );
+		mike_entry_comments( $post_id );
 		echo '</div>';
 	}
 endif;

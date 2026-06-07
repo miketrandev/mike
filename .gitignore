@@ -7,4 +7,5 @@ mike-v*.zip
 # Claude / AI working files
 CLAUDE.md
 coding-style.md
+claude-auth.md
 .claude/

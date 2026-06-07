@@ -9,7 +9,7 @@ Description: Mike is a personal & blog wordpress theme with minimalist style, ze
 Requires at least: 6.0
 Tested up to: 7.0
 Requires PHP: 7.4
-Version: 0.12
+Version: 1.0
 License: GNU General Public License v2 or later
 License URI: https://www.gnu.org/licenses/gpl-2.0.html
 Text Domain: mike
@@ -19,22 +19,57 @@ Tags: blog, custom-logo, custom-menu, featured-images, threaded-comments, transl
 @use "scss/mixins" as *;
 @use "scss/normalize";
 
+/*
+TABLE OF CONTENTS
+--------------------------------------------
+1. general        - box-sizing, body, headings, img, links
+    1.1 form      - labels
+    1.2 input     - text inputs, select, textarea
+    1.3 button    - submit/button/reset
+    1.4 media     - image alignment, caption, [gallery] (classic & gutenberg)
+2. layout         - .container, .reading widths
+3. header         - layout, branding, menu, mobile icons, off-canvas
+4. footer         - copyright, footer menu
+5. blog - archive - layout, header, loop, pagination
+6. single         - post body, tags, comments (list + reply form)
+*/
+
 :root {
-    --container-width: 1020px;
-    --reading: 620px;
+    --container-width: 1170px;
+    --reading: 640px;
+    --wide: 900px; /* alignwide width, between reading and full */
 
     --body-font: sans-serif;
     --heading-font: sans-serif;
 
-    --accent: #08c;
+    --accent: rgb(0, 0, 238);
     --gray: #999;
     --dark-gray: #555;
     --dark: #111;
 
     --border: rgba(0,0,0,.07);
+
+    /* spacing scale - adjust here to retune rhythm everywhere (e.g. on mobile) */
+    --spacing: 2em;          /* default gap between flowing elements */
+    --spacing-md: 2.5em;     /* heading rhythm */
+    --spacing-lg: 3em;       /* between minor sections */
+    --spacing-xl: 4em;       /* between major sections */
+    --spacing-2xl: 6em;      /* page-level breathing room */
+
 }
 
-/* general
+/* tablet & phone - tighten the whole spacing scale in one place */
+@include below(tablet) {
+    :root {
+        --spacing: 1.5em;
+        --spacing-md: 1.75em;
+        --spacing-lg: 2em;
+        --spacing-xl: 2.5em;
+        --spacing-2xl: 3.5em;
+    }
+}
+
+/* 1. general
 -------------------------------------------- */
 html {
     box-sizing: border-box;
@@ -62,19 +97,52 @@ h1, h2, h3, h4, h5, h6 {
 h1 {
     font-size: 1.8em;
 }
+img {
+    height: auto;
+    max-width: 100%;
+}
+
+/* spacing - consistent vertical rhythm on common elements */
+p,
+ul,
+ol,
+blockquote,
+figure,
+pre,
+table {
+    margin-top: 0;
+    margin-bottom: var(--spacing);
+}
+h1, h2, h3, h4, h5, h6 {
+    margin-top: 0;
+    margin-bottom: 0.5em;
+}
 
 a {
     color: var(--accent);
 }
 
-/* form
+/* screen-reader-text - visible to assistive tech only (standard WP class) */
+.screen-reader-text {
+    position: absolute;
+    width: 1px;
+    height: 1px;
+    padding: 0;
+    margin: -1px;
+    overflow: hidden;
+    clip: rect(0, 0, 0, 0);
+    white-space: nowrap;
+    border: 0;
+}
+
+/* 1.1 form
 ------------------- */
 label {
     display: inline-block;
     margin-bottom: 4px;
 }
 
-/* input
+/* 1.2 input
 ------------------- */
 input[type="text"],
 input[type="email"],
@@ -93,11 +161,12 @@ textarea {
     color: var(--dark);
     background: white;
     border: 1px solid var(--border);
-    border-radius: 2px;
+    border: 0;
+    background: rgba(0,0,0,.05);
+    border-radius: 0px;
 
     &:focus {
-        outline: none;
-        border-color: var(--accent);
+        outline: 2px solid var(--accent);
     }
 
     &::placeholder {
@@ -110,7 +179,7 @@ textarea {
     resize: vertical;
 }
 
-/* button
+/* 1.3 button
 ------------------- */
 button,
 input[type="submit"],
@@ -123,7 +192,7 @@ input[type="reset"] {
     color: white;
     background: var(--accent);
     border: 0;
-    border-radius: 2px;
+    border-radius: 0px;
     cursor: pointer;
     transition: opacity .2s;
 
@@ -132,7 +201,86 @@ input[type="reset"] {
     }
 }
 
-/* layout
+/* 1.4 media
+------------------- */
+/* alignment - classic editor & gutenberg use the same classes */
+.alignleft {
+    float: left;
+    max-width: 50%;
+    margin: 0.5em 1.5em 1em 0;
+}
+.alignright {
+    float: right;
+    max-width: 50%;
+    margin: 0.5em 0 1em 1.5em;
+}
+.aligncenter {
+    display: block;
+    margin-left: auto;
+    margin-right: auto;
+}
+.alignnone {
+    margin: 1em 0;
+}
+p .alignnone {
+    margin: 0;
+}
+
+/* caption - classic .wp-caption & gutenberg figcaption */
+.wp-caption {
+    max-width: 100%;
+}
+.wp-caption img {
+    display: block;
+}
+.wp-caption-text,
+figcaption {
+    margin-top: 0.5em;
+    font-size: 0.85em;
+    color: var(--gray);
+    // text-align: center;
+}
+
+/* gallery - classic [gallery] shortcode, columns set the grid */
+.gallery {
+    display: grid;
+    grid-template-columns: repeat(3, 1fr); /* shortcode default */
+    gap: 10px;
+    margin: var(--spacing) 0;
+}
+.gallery-columns-1 { grid-template-columns: repeat(1, 1fr); }
+.gallery-columns-2 { grid-template-columns: repeat(2, 1fr); }
+.gallery-columns-4 { grid-template-columns: repeat(4, 1fr); }
+.gallery-columns-5 { grid-template-columns: repeat(5, 1fr); }
+.gallery-columns-6 { grid-template-columns: repeat(6, 1fr); }
+.gallery-columns-7 { grid-template-columns: repeat(7, 1fr); }
+.gallery-columns-8 { grid-template-columns: repeat(8, 1fr); }
+.gallery-columns-9 { grid-template-columns: repeat(9, 1fr); }
+
+.gallery-item {
+    margin: 0;
+    text-align: center;
+}
+.gallery-item img {
+    width: 100%;
+    height: auto;
+    display: block;
+}
+.gallery-caption {
+    display: block;
+    margin-top: 0.5em;
+    font-size: 0.85em;
+    color: var(--gray);
+}
+
+/* phone - too many columns get cramped, drop to two */
+@include below(phone) {
+    .gallery {
+        grid-template-columns: repeat(2, 1fr);
+    }
+}
+
+/* 2. layout
 -------------------------------------------- */
 .container {
     width: var(--container-width);
@@ -145,7 +293,7 @@ input[type="reset"] {
     margin: 0 auto;
 }
 
-/* header
+/* 3. header
 -------------------------------------------- */
 /* header layout
 ------------------- */
@@ -155,7 +303,45 @@ input[type="reset"] {
     justify-content: space-between; /* logo left, nav right */
     gap: 2rem;
 
-    padding: 2em 0;
+    padding: 1em 0;
+
+    @include below(tablet) {
+        padding: 0.5em 0;
+    }
+}
+@include below(tablet) {
+    .site-header {
+        border-bottom: 1px solid var(--border);
+    }
+}
+
+/* mobile icons (search + hamburger) - hidden on desktop */
+.header-icons {
+    display: none;
+    align-items: center;
+    gap: 0.25em;
+
+    @include below(tablet) {
+        display: flex;
+    }
+}
+
+.header-icon {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    width: 2.5em;
+    height: 2.5em;
+    padding: 0;
+    border: 0;
+    background: none;
+    color: inherit;
+    cursor: pointer;
+
+    svg {
+        width: 20px;
+        height: 20px;
+    }
 }
 
 /* branding (logo | title + tagline)
@@ -168,15 +354,17 @@ input[type="reset"] {
 
 .site-identity {
     display: flex;
-    flex-direction: column; /* title above, tagline below */
+    align-items: center;
+    // flex-direction: column; /* title above, tagline below */
 }
 
-.site-header .site-title {
+.site-title {
     margin: 0;
-    font-size: 1em;
+    font-size: 1.3em;
     font-weight: 600;
     font-family: var(--heading-font);
     line-height: 1.1;
+    display: inline;
 
     a {
         text-decoration: none;
@@ -184,11 +372,30 @@ input[type="reset"] {
     }
 }
 
-.site-header .site-tagline {
+.site-tagline {
+    display: inline;
     margin: 0;
     font-size: 0.85rem;
     color: var(--gray);
     line-height: 1.3;
+
+    &::before {
+        content: "\B7";
+        margin: 0 5px;
+    }
+}
+
+@include below(tablet) {
+    .site-identity {
+        display: block;
+    }
+    .site-title,
+    .site-tagline {
+        display: block;
+    }
+    .site-tagline:before {
+        display: none;
+    }
 }
 
 .site-header .custom-logo-link img {
@@ -199,6 +406,12 @@ input[type="reset"] {
 
 /* header menu
 ------------------- */
+/* desktop nav - hidden on mobile, the off-canvas takes over */
+.site-header .primary-nav {
+    @include below(tablet) {
+        display: none;
+    }
+}
 .site-header .primary-nav .menu {
     display: flex;
     flex-wrap: wrap;
@@ -208,6 +421,7 @@ input[type="reset"] {
     padding: 0;
     list-style: none;
     font-family: var(--heading-font);
+    color: var(--gray);
 
     > li {
         display: block;
@@ -221,14 +435,13 @@ input[type="reset"] {
         line-height: 1.5;
         padding: 12px 0;
         line-height: 20px;
-
         transition: all .2s;
     }
     > li.current-menu-item,
     > li.current-menu-ancestor,
     > li:hover {
         > a {
-            color: var(--gray);
+            color: var(--dark);
         }
     }
 
@@ -248,7 +461,7 @@ input[type="reset"] {
         left: 0;
         width: 160px;
         background: white;
-        box-shadow: 2px 3px 10px rgba(0,0,0,.05);
+        box-shadow: 2px 3px 20px rgba(0,0,0,.1);
         border-radius: 1px;
 
         list-style: none;
@@ -258,9 +471,11 @@ input[type="reset"] {
         // padding: 14px;
         border: 1px solid var(--border);
         font-size: 0.9em;
+        border-radius: 3px;
+        padding: 12px;
 
         > li + li {
-            border-top: 1px solid var(--border);
+            // border-top: 1px solid var(--border);
         }
 
         ul {
@@ -272,14 +487,13 @@ input[type="reset"] {
             display: block;
             padding: 8px 10px;
             line-height: 20px;
-            color: var(--dark-gray);
+            color: var(--dark);
         }
         > li.current-menu-item,
         > li.current-menu-ancestor,
         > li:hover {
             > a {
                 color: var(--dark);
-                background: rgba(0,0,0,.02);
             }
         }
     }
@@ -288,23 +502,100 @@ input[type="reset"] {
     }
 }
 
-/* footer
+/* off-canvas menu (mobile, opened by the hamburger)
+------------------- */
+.header-offcanvas {
+    position: fixed;
+    inset: 0;
+    z-index: 1000;
+}
+.header-offcanvas[hidden] {
+    display: none;
+}
+
+.header-offcanvas__backdrop {
+    position: absolute;
+    inset: 0;
+    background: rgba(0, 0, 0, 0.4);
+    opacity: 0;
+    transition: opacity 0.25s ease;
+}
+
+.header-offcanvas__panel {
+    position: absolute;
+    top: 0;
+    bottom: 0;
+    right: 0; /* slides in from the right */
+    width: min(80vw, 320px);
+    padding: 1em 1.5em;
+    overflow-y: auto;
+    background: white;
+    box-shadow: -4px 0 24px rgba(0, 0, 0, 0.12);
+    transform: translateX(100%);
+    transition: transform 0.25s ease;
+}
+
+.header-offcanvas.is-open .header-offcanvas__backdrop {
+    opacity: 1;
+}
+.header-offcanvas.is-open .header-offcanvas__panel {
+    transform: none;
+}
+
+/* close button - top-right of the panel */
+.header-offcanvas__close {
+    margin-left: auto;
+    margin-bottom: 0.5em;
+}
+
+/* stacked nav inside the panel */
+.offcanvas-nav .menu,
+.offcanvas-nav ul {
+    display: flex;
+    flex-direction: column;
+    margin: 0;
+    padding: 0;
+    list-style: none;
+    font-family: var(--heading-font);
+}
+.offcanvas-nav a {
+    display: block;
+    padding: 0.6em 0;
+    text-decoration: none;
+    color: inherit;
+}
+/* hairline between top-level items */
+.offcanvas-nav > .menu > .menu-item + .menu-item {
+    border-top: 1px solid var(--border);
+}
+/* sub-menus indent under their parent */
+.offcanvas-nav .sub-menu {
+    padding-left: 1em;
+    font-size: 0.95em;
+}
+
+/* lock background scroll while the panel is open */
+.has-offcanvas-open {
+    overflow: hidden;
+}
+
+/* 4. footer
 -------------------------------------------- */
 .site-footer {
-    padding: 6em 0;
+    padding: var(--spacing-2xl) 0;
     font-size: 0.9em;
 }
 .copyright {
     color: var(--gray);
 
     a {
-        color: inherit;
+        // color: inherit;
         text-decoration: none;
         &:hover {
-            color: var(--dark-gray);
+            // color: var(--dark-gray);
+            text-decoration: underline;
         }
     }
-
     p {
         margin: 0;
     }
@@ -318,7 +609,7 @@ input[type="reset"] {
 .footer-nav .menu {
     display: flex;
     flex-wrap: wrap;
-    gap: 1.5rem;
+    gap: 0.5rem 1.5rem;
     margin: 0;
     padding: 0;
     list-style: none;
@@ -328,7 +619,7 @@ input[type="reset"] {
         color: var(--gray);
         text-decoration: none;
         &:hover {
-            color: var(--dark-gray);
+            color: var(--dark);
         }
     }
     .current-menu-item > a {
@@ -336,7 +627,7 @@ input[type="reset"] {
     }
 }
 
-/* blog - archive
+/* 5. blog - archive
 -------------------------------------------- */
 /* archive layout
 ------------------- */
@@ -349,7 +640,7 @@ input[type="reset"] {
 /* archive header
 ------------------- */
 .archive-header {
-    padding: 4em 0 6em;
+    padding: var(--spacing-xl) 0 var(--spacing-2xl);
     h1 {
         margin: 0;
     }
@@ -360,16 +651,22 @@ input[type="reset"] {
     justify-content: space-between; /* title left, page number right */
     gap: 10px;
 }
+// page 2, page 3.. label
 .archive-page {
     color: var(--gray);
     font-size: 0.9em;
 }
 .archive-description {
     font-size: 1.1em;
-    color: var(--gray);
+    // color: var(--gray);
     line-height: 1.3;
     margin-top: 0.2em;
     max-width: 400px;
+
+    @include below(tablet) {
+        font-size: 1em;
+    }
+
     p {
         margin: 0;
     }
@@ -378,30 +675,39 @@ input[type="reset"] {
 /* archive loop
 ------------------- */
 .entry-list:first-child {
-    margin-top: 4em;
+    margin-top: var(--spacing-xl);
 }
 .mike-entry + .mike-entry {
-    margin-top: 6em;
+    margin-top: var(--spacing-2xl);
     // padding-top: 2em;
     // border-top: 1px solid var(--border);
 }
 
 .mike-entry {
-    display: flex;
-    align-items: center;
+    // display: flex;
+    align-items: flex-start;
     gap: 20px;
     position: relative;
+}
 
-    .entry-body {
-        flex: 1 1 auto;
-        min-width: 0; /* let long text wrap, not stretch the row */
-    }
+.entry-body {
+    display: flex;
+    align-items: flex-start;
+    gap: 20px;
+    position: relative;
+}
+
+.entry-text {
+    flex: 1 1 auto;
 }
 
 .entry-title {
     margin: 0;
-    font-size: 1.3em;
-    font-weight: 600;
+    font-size: 1.5em;
+
+    @include below(tablet) {
+        // font-size: 1.2em;
+    }
 
     a {
         color: inherit;
@@ -415,12 +721,22 @@ input[type="reset"] {
 }
 
 .entry-summary {
-    // color: var(--gray);
-    margin-top: 2em;
-    // font-size: 0.9em;
-    max-width: 400px;
+    margin-top: 1em;
+    overflow-wrap: break-word; /* break long URLs so they don't overflow */
+    word-break: break-all;
+    @include below(tablet) {
+        // font-size: 0.9em;
+    }
     p {
         margin: 0;
+    }
+
+    a {
+        text-decoration: none;
+        // color: var(--dark-gray);
+        &:hover {
+            // color: var(--dark);
+        }
     }
 }
 
@@ -430,6 +746,10 @@ input[type="reset"] {
     flex-flow: row wrap;
     margin-top: 0.5em;
 
+    @include below(tablet) {
+        // font-size: 0.85em;
+    }
+
     > * + *:before {
         content: "\B7";
         margin: 0 6px;
@@ -437,7 +757,6 @@ input[type="reset"] {
     }
 
     color: var(--gray);
-    font-size: 0.9em;
 
     a {
         color: inherit;
@@ -446,6 +765,18 @@ input[type="reset"] {
         &:hover {
             color: var(--dark-gray);
         }
+    }
+}
+
+/* comment icon + count inside the meta row */
+.entry-comments {
+    display: inline-flex;
+    align-items: center;
+    gap: 4px;
+
+    .mike-icon {
+        /* nudge the bubble to sit on the text baseline */
+        margin-bottom: -2px;
     }
 }
 .entry-categories {
@@ -458,23 +789,21 @@ input[type="reset"] {
 .entry-thumbnail {
     flex: 0 0 auto;
     display: block;
-    width: 72px;
-    height: 72px; /* square */
-
+    width: 100px;
+    height: 100px;
     order: 2;
-    
-    margin-bottom: 1em;
+    margin: 0;
 
-    // position: absolute;
-    // left: -100px;
-    // top: 0;
-
-    // display: none;
+    @include below(tablet) {
+        width: 80px;
+        height: 80px;
+    }
 
     img {
         width: 100%;
         height: 100%;
         object-fit: cover; /* fill the square without distortion */
+        object-position: center center;
         display: block;
     }
 }
@@ -482,23 +811,31 @@ input[type="reset"] {
 /* pagination
 ------------------- */
 .pagination {
-    margin: 6em 0 0;
-    color: var(--gray);
+    margin: var(--spacing-2xl) 0 0;
+
+    font-size: 1.1875em;
+
+    @include below( tablet ) {
+        font-size: 1em;
+    }
+
     a {
-        color: inherit;
         text-decoration: none;
         &:hover {
-            color: var(--dark-gray);
+            text-decoration: underline;
         }
     }
     .nav-links > * {
         & + * {
             margin-left: 1em;
+            @include below( tablet ) {
+                margin-left: 0.5em;
+            }
         }
     }
 }
 
-/* single
+/* 6. single
 -------------------------------------------- */
 .mike-single {
     margin: 0 auto;
@@ -509,25 +846,264 @@ input[type="reset"] {
     margin: 0;
 }
 .single-header {
-    padding: 2em 0 2em;
+    padding: 1em 0 var(--spacing-lg);
+
+    @include below(tablet) {
+        padding-top: var(--spacing-lg);
+    }
+}
+
+
+.entry-content {
+    font-size: 1.1875em;
+    overflow-wrap: break-word; /* break long URLs so they don't overflow */
+
+    @include below(tablet) {
+        // font-size: 1em;
+    }
+
+    a:hover {
+        text-decoration: none;
+    }
+
+    /* flow - even gap between every block, no gap before the first */
+    > * {
+        margin-top: var(--spacing);
+        margin-bottom: 0;
+    }
+    > *:first-child {
+        margin-top: 0;
+    }
+
+    /* alignwide / alignfull - break out only when the screen is wide enough */
+    @media (min-width: 900px) {
+        .alignwide {
+            width: var(--wide);
+            max-width: 90vw;
+            margin-left: 50%;
+            transform: translateX(-50%);
+
+            .wp-element-caption {
+                max-width: var(--reading);
+                margin-inline: auto;
+            }
+        }
+        .alignfull {
+            width: 96vw;
+            margin-left: 50%;
+            transform: translateX(-50%);
+
+            .wp-element-caption {
+                max-width: var(--reading);
+                margin-inline: auto;
+            }
+        }
+    }
+
+    /* headings - extra space above so they group with the text below */
+    h2, h3, h4, h5, h6 {
+        margin-top: var(--spacing-md);
+    }
+
+    /* lists - indent and space their items */
+    ul, ol {
+        padding-left: 1.5em;
+    }
+    li + li {
+        margin-top: 0.5em;
+    }
+
+
+    /* blockquote - set off from the body */
+    blockquote {
+        margin-left: 0;
+        padding-left: 1em;
+        border-left: 2px solid var(--border);
+        color: var(--gray);
+
+        p {
+            margin: 0;
+        }
+
+
+        cite {
+            font-family: monospace;
+            font-size: 14px;
+            font-style: normal;
+            display: block;
+            margin-top: 1em;
+        }
+    }
 }
 
 
 .entry-tags {
-    margin-top: 4em;
+    margin-top: var(--spacing-lg);
     color: var(--gray);
+    border-top: 1px solid var(--border);
+    padding-top: var(--spacing-lg);
+    a {
+        // color: inherit;
+        text-decoration: none;
+        &:hover {
+            text-decoration: underline;
+        }
+    }
+    a {
+        margin-left: 1em;
+    }
+}
+
+/* comments
+------------------- */
+#comments {
+    margin-top: var(--spacing);
+}
+
+.comments-title {
+    font-size: 1.3em;
+    margin-bottom: var(--spacing);
+}
+
+/* the threaded list */
+.comment-list {
+    list-style: none;
+    margin: 0;
+    padding: 0;
+}
+.comment-list ol.children {
+    list-style: none;
+    margin: 0;
+    padding-left: 1.5em; /* indent replies */
+}
+.comment-list li.comment {
+    margin-top: var(--spacing);
+}
+
+.comment-body {
+    padding-bottom: var(--spacing);
+    border-bottom: 1px solid var(--border);
+}
+
+/* author row - [ avatar | name above, date below ]
+   WP nests .avatar+.fn inside .comment-author, with .comment-metadata as a
+   sibling. `display: contents` flattens .comment-author so the avatar, name,
+   and date all land in this one grid: avatar spans both rows on the left. */
+.comment-meta {
+    display: grid;
+    grid-template-columns: auto 1fr;
+    grid-template-rows: auto auto;
+    align-items: center;
+    column-gap: 10px;
+    font-size: 0.85em;
+
     a {
         color: inherit;
         text-decoration: none;
         &:hover {
-            color: var(--dark-gray);
+            text-decoration: underline;
         }
     }
-    a + a {
-        margin-left: 10px;
+}
+.comment-author {
+    display: contents;
+}
+.comment-author .avatar {
+    grid-row: 1 / 3; /* avatar spans name + date rows */
+    display: block;
+}
+.comment-author .fn {
+    align-self: end;
+    font-weight: 600;
+    font-style: normal;
+    font-size: 1.1em;
+}
+.comment-author .says {
+    display: none;
+}
+.comment-metadata {
+    align-self: start;
+    color: var(--gray);
+}
+
+.comment-content {
+    margin-top: 0.75em;
+    overflow-wrap: break-word;
+
+    p {
+        margin: 0 0 0.75em;
     }
 }
 
-#comments {
-    margin-top: 4em;
+/* reply + edit links */
+.comment-body .reply {
+    margin-top: 0.5em;
+    font-size: 0.85em;
+
+    a {
+        text-decoration: none;
+        &:hover {
+            text-decoration: underline;
+        }
+    }
+}
+
+.bypostauthor > .comment-body {
+    /* a subtle cue that the author replied */
+    border-left: 2px solid var(--accent);
+    padding-left: 1em;
+}
+
+/* comment pagination */
+.comment-navigation {
+    margin-top: var(--spacing);
+    font-size: 0.9em;
+
+    a {
+        text-decoration: none;
+        &:hover {
+            text-decoration: underline;
+        }
+    }
+    .nav-previous {
+        margin-right: 1em;
+    }
+}
+
+.no-comments {
+    color: var(--gray);
+    font-style: italic;
+}
+
+/* the reply form */
+#respond {
+    padding-top: var(--spacing);
+}
+.comment-respond {
+    margin-top: var(--spacing-lg);
+}
+.comment-reply-title {
+    font-size: 1.2em;
+    margin-bottom: 0.75em;
+
+    small {
+        margin-left: 1em;
+        font-size: 0.7em;
+        font-weight: 400;
+    }
+}
+.comment-form p {
+    margin-bottom: 1em;
+}
+.comment-form-cookies-consent {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+
+    input {
+        width: auto;
+    }
+}
+.form-submit {
+    margin-bottom: 0;
 }
