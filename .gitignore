@@ -1,0 +1,10 @@
+# Scratch / reference dirs not meant to ship
+ref/
+
+# Build output
+mike-v*.zip
+
+# Claude / AI working files
+CLAUDE.md
+coding-style.md
+.claude/

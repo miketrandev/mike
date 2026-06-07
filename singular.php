@@ -14,9 +14,9 @@
 				?>
 				<header class="single-header">
 
-					<?php mike_entry_meta(); ?>
-
 					<h1 class="single-title"><?php the_title(); ?></h1>
+
+					<?php mike_entry_meta(); ?>
 
 				</header>
 			<?php endif; ?>

@@ -41,16 +41,17 @@ if ( ! $mike_title ) {
 
 <header class="archive-header">
 
-	<h1 class="archive-title"><?php echo wp_kses_post( $mike_title ); ?></h1>
-
-	<?php
-	// Show "Page N" on paged archives.
-	$mike_paged = (int) get_query_var( 'paged' );
-	if ( $mike_paged > 1 ) {
-		/* translators: %d: page number. */
-		echo '<span class="archive-page">' . sprintf( esc_html__( 'Page %d', 'mike' ), $mike_paged ) . '</span>';
-	}
-	?>
+	<div class="archive-heading">
+		<h1 class="archive-title"><?php echo wp_kses_post( $mike_title ); ?></h1>
+		<?php
+		// Show "Page N" on paged archives.
+		$mike_paged = (int) get_query_var( 'paged' );
+		if ( $mike_paged > 1 ) {
+			/* translators: %d: page number. */
+			echo '<span class="archive-page">' . sprintf( esc_html__( 'Page %d', 'mike' ), $mike_paged ) . '</span>';
+		}
+		?>
+	</div>
 
 	<?php if ( $mike_desc ) : ?>
 		<div class="archive-description"><?php echo wp_kses_post( $mike_desc ); ?></div>

@@ -130,19 +130,28 @@ if ( ! function_exists( 'mike_get_thumbnail' ) ) :
 	function mike_get_thumbnail( $post_id = null, $size = 'medium', $min_width = 300 ) {
 		$post_id = $post_id ? $post_id : get_the_ID();
 
+		// Memoize per post — the regex below should run once per post.
+		static $cache = array();
+		if ( isset( $cache[ $post_id ] ) ) {
+			return $cache[ $post_id ];
+		}
+
+		$cache[ $post_id ] = '';
+
 		// 1. Featured image wins.
 		if ( has_post_thumbnail( $post_id ) ) {
-			return get_the_post_thumbnail( $post_id, $size, array( 'loading' => 'lazy', 'alt' => '' ) );
+			$cache[ $post_id ] = get_the_post_thumbnail( $post_id, $size, array( 'loading' => 'lazy', 'alt' => '' ) );
+			return $cache[ $post_id ];
 		}
 
 		// 2. Fall back to the first wide-enough <img> in the content.
 		$content = get_post_field( 'post_content', $post_id );
 		if ( ! $content || false === strpos( $content, '<img' ) ) {
-			return '';
+			return $cache[ $post_id ];
 		}
 
 		if ( ! preg_match_all( '/<img\b[^>]*>/i', $content, $imgs ) ) {
-			return '';
+			return $cache[ $post_id ];
 		}
 
 		foreach ( $imgs[0] as $img ) {
@@ -153,12 +162,20 @@ if ( ! function_exists( 'mike_get_thumbnail' ) ) :
 			if ( ! preg_match( '/\bsrc\s*=\s*["\']([^"\']+)["\']/i', $img, $src ) ) {
 				continue;
 			}
-			return sprintf(
+			$cache[ $post_id ] = sprintf(
 				'<img src="%s" loading="lazy" alt="" />',
 				esc_url( $src[1] )
 			);
+			break;
 		}
 
-		return '';
+		return $cache[ $post_id ];
+	}
+endif;
+
+if ( ! function_exists( 'mike_has_thumbnail' ) ) :
+	/** Whether mike_get_thumbnail() finds an image. Cached via that function. */
+	function mike_has_thumbnail( $post_id = null ) {
+		return '' !== mike_get_thumbnail( $post_id );
 	}
 endif;

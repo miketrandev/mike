@@ -45,9 +45,10 @@ if ( ! function_exists( 'mike_setup' ) ) :
 		// Title tag
 		add_theme_support( 'title-tag' );
 		
-		// Register nav menus. 'social' is a URL list whose items render as brand
+		// Register nav menus.
 		register_nav_menus( array(
-			'primary-menu'   => __( 'Primary Menu', 'mike' )
+			'primary-menu' => __( 'Primary Menu', 'mike' ),
+			'footer-menu'  => __( 'Footer Menu', 'mike' ),
 		) );
 		
 		// Make the theme translation ready

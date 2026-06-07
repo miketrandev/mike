@@ -4,7 +4,7 @@
 
 		<footer class="site-footer" role="contentinfo">
 
-			<div class="container">
+			<div class="reading">
 
 				<?php
 				// Build the copyright line in 3 parts, then print once.
@@ -28,6 +28,20 @@
 				<div class="copyright">
 					<p><?php echo $copyright_text; // phpcs:ignore WordPress.Security.EscapeOutput -- parts escaped above. ?></p>
 				</div>
+
+				<?php
+				if ( has_nav_menu( 'footer-menu' ) ) {
+					wp_nav_menu( array(
+						'theme_location' => 'footer-menu',
+						'menu_class'     => 'menu footer-menu',
+						'container'      => 'nav',
+						'container_class' => 'footer-nav',
+						'container_aria_label' => esc_attr__( 'Footer menu', 'mike' ),
+						'depth'          => 1,
+						'fallback_cb'    => false,
+					) );
+				}
+				?>
 
 			</div><!-- .container -->
 

@@ -9,7 +9,7 @@
  * TABLE OF CONTENTS
  * ------------------------------------------------
  * 1. mike_excerpt_more     - replace the trailing [...] with an ellipsis
- * 2. mike_excerpt_length   - cap auto excerpts at 24 words
+ * 2. mike_excerpt_length   - 32 words with a thumbnail, 48 without
  * 3. mike_archive_title    - drop the "Category:" / "Tag:" prefix
  *
  * @package Mike
@@ -29,12 +29,13 @@ if ( ! function_exists( 'mike_excerpt_more' ) ) :
 	add_filter( 'excerpt_more', 'mike_excerpt_more' );
 endif;
 
-/* 2. mike_excerpt_length - cap auto excerpts at 24 words
+/* 2. mike_excerpt_length - 32 words with a thumbnail, 48 without
 ------------------------------------------------ */
 
 if ( ! function_exists( 'mike_excerpt_length' ) ) :
 	function mike_excerpt_length( $length ) {
-		return 32;
+		// Posts without a thumbnail get a longer excerpt to fill the row.
+		return mike_has_thumbnail() ? 24 : 24;
 	}
 	add_filter( 'excerpt_length', 'mike_excerpt_length' );
 endif;
