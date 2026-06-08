@@ -10,8 +10,8 @@ if ( ! defined( 'ABSPATH' ) ) {
 	exit;
 }
 
-$mike_show_title   = get_theme_mod( 'mike_show_title', true );
-$mike_show_tagline = get_theme_mod( 'mike_show_tagline', true );
+$mike_show_title   = get_theme_mod( 'show_title', true );
+$mike_show_tagline = get_theme_mod( 'show_tagline', true );
 $mike_has_logo     = function_exists( 'has_custom_logo' ) && has_custom_logo();
 $mike_tagline      = get_bloginfo( 'description', 'display' );
 ?>

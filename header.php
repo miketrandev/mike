@@ -73,16 +73,34 @@
 				panel.hidden = false;
 				// Next frame so the slide-in transition runs.
 				requestAnimationFrame( function () { panel.classList.add( 'is-open' ); } );
+				// Move focus into the panel (the close button) for keyboard users.
+				var close = panel.querySelector( '.header-offcanvas__close' );
+				if ( close ) { close.focus(); }
 			} else {
 				panel.classList.remove( 'is-open' );
 				setTimeout( function () { panel.hidden = true; }, 250 );
+				// Return focus to the hamburger that opened the panel.
+				if ( burger ) { burger.focus(); }
 			}
 			document.body.classList.toggle( 'has-offcanvas-open', open );
 			if ( burger ) { burger.setAttribute( 'aria-expanded', open ? 'true' : 'false' ); }
 		}
-		// Close on Escape.
 		document.addEventListener( 'keydown', function ( e ) {
-			if ( 'Escape' === e.key ) { mikeToggleOffcanvas( false ); }
+			var panel = document.getElementById( 'mike-offcanvas' );
+			if ( ! panel || panel.hidden ) { return; }
+			// Escape closes the panel.
+			if ( 'Escape' === e.key ) { mikeToggleOffcanvas( false ); return; }
+			// Trap Tab inside the open panel.
+			if ( 'Tab' === e.key ) {
+				var f = panel.querySelectorAll( 'a[href], button, input, textarea, select, [tabindex]:not([tabindex="-1"])' );
+				if ( ! f.length ) { return; }
+				var first = f[0], last = f[ f.length - 1 ];
+				if ( e.shiftKey && document.activeElement === first ) {
+					e.preventDefault(); last.focus();
+				} else if ( ! e.shiftKey && document.activeElement === last ) {
+					e.preventDefault(); first.focus();
+				}
+			}
 		} );
 		</script>
 

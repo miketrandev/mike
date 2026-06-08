@@ -32,10 +32,16 @@
 				?>
 			</div><!-- .entry-content -->
 
-			<?php mike_single_tags(); ?>
+			<?php
+			// Single Post customizer toggles (default on).
+			if ( get_theme_mod( 'show_tags', true ) ) {
+				mike_single_tags();
+			}
+			?>
 
 			<?php if (
-				( comments_open() || get_comments_number() )
+				get_theme_mod( 'show_comments', true )
+				&& ( comments_open() || get_comments_number() )
 				&& ! post_password_required()
 			) {
 				comments_template();

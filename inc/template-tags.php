@@ -129,10 +129,18 @@ if ( ! function_exists( 'mike_entry_date' ) ) :
 endif;
 
 if ( ! function_exists( 'mike_entry_comments' ) ) :
-	/** Comment icon + count, linking to the comments. Hidden when there are none. */
+	/**
+	 * Comment icon + count, linking to the comments. Hidden when there are none.
+	 * Archive uses the Blog / Archive "Show comment count" toggle; single uses
+	 * the Single Post one — both default on.
+	 */
 	function mike_entry_comments( $post_id = null ) {
 		$post_id = $post_id ? $post_id : get_the_ID();
-		$count   = (int) get_comments_number( $post_id );
+		$mod = is_singular() ? 'single_show_comment_count' : 'show_comment_count';
+		if ( ! get_theme_mod( $mod, true ) ) {
+			return;
+		}
+		$count = (int) get_comments_number( $post_id );
 		if ( $count < 1 ) {
 			return;
 		}
@@ -147,15 +155,26 @@ if ( ! function_exists( 'mike_entry_comments' ) ) :
 endif;
 
 if ( ! function_exists( 'mike_entry_meta' ) ) :
-	/** Categories + date + comment count wrapper above the title. Posts only. */
+	/**
+	 * Categories + date + comment count wrapper above the title. Posts only.
+	 * Archive and single each have their own categories/date/comment toggles
+	 * (Blog / Archive vs Single Post customizer sections); all default on.
+	 */
 	function mike_entry_meta( $post_id = null ) {
 		$post_id = $post_id ? $post_id : get_the_ID();
 		if ( 'post' !== get_post_type( $post_id ) ) {
 			return;
 		}
+		$is_single = is_singular();
+		$show_cats = get_theme_mod( $is_single ? 'single_show_categories' : 'show_categories', true );
+		$show_date = get_theme_mod( $is_single ? 'single_show_date' : 'show_date', true );
 		echo '<div class="entry-meta">';
-		mike_entry_categories( $post_id );
-		mike_entry_date( $post_id );
+		if ( $show_cats ) {
+			mike_entry_categories( $post_id );
+		}
+		if ( $show_date ) {
+			mike_entry_date( $post_id );
+		}
 		mike_entry_comments( $post_id );
 		echo '</div>';
 	}

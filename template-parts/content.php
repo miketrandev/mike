@@ -13,7 +13,8 @@ if ( ! defined( 'ABSPATH' ) ) {
 	exit;
 }
 
-$mike_thumb = mike_get_thumbnail( get_the_ID(), 'large' );
+// Customizer toggles (Blog / Archive section) — all default on.
+$mike_thumb = get_theme_mod( 'show_thumbnail', true ) ? mike_get_thumbnail( get_the_ID(), 'large' ) : '';
 ?>
 
 <article id="post-<?php the_ID(); ?>" <?php post_class( 'mike-entry' ); ?>>
@@ -32,7 +33,9 @@ $mike_thumb = mike_get_thumbnail( get_the_ID(), 'large' );
 				<a href="<?php the_permalink(); ?>"><?php the_title(); ?></a>
 			</h2>
 
-			<div class="entry-summary"><?php the_excerpt(); ?></div>
+			<?php if ( get_theme_mod( 'show_excerpt', true ) ) : ?>
+				<div class="entry-summary"><?php the_excerpt(); ?></div>
+			<?php endif; ?>
 
 			<?php mike_entry_meta(); ?>
 

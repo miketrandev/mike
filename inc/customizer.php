@@ -18,12 +18,22 @@
  *   3. mike_font_inline_css    - @font-face + :root tokens for the chosen fonts
  *   4. mike_font_enqueue       - attach that CSS to the stylesheet
  *   5. mike_sanitize_checkbox  - true | false sanitizer for checkboxes
+ *   6. mike_color_inline_css   - :root token overrides + ::selection (only if set)
+ *   7. mike_color_enqueue      - attach the color overrides to the stylesheet
  *
  * CONTENT (sections + options)
- *   6. mike_customize_register - Typography + Footer sections and their controls
+ *   8. mike_customize_register - Typography, Style, Blog/Archive, Single, Footer
  *
- * Settings read elsewhere: mike_heading_font, mike_body_font (footer.php reads
- * mike_show_copyright_prefix, mike_copyright, mike_keep_credit).
+ * Theme-mod keys carry NO mike_ prefix — get_theme_mod() is already per-theme,
+ * so the names can't collide. Settings read elsewhere: heading_font, body_font
+ * (font CSS); the Style colors (emitted by mike_color_inline_css above); the
+ * archive parts (show_excerpt|categories|date|thumbnail|comment_count) in
+ * content.php + mike_entry_meta, and excerpt_length / show_excerpt_more in
+ * template-functions.php; the single parts (show_tags|comments in singular.php;
+ * single_show_categories|date|comment_count in mike_entry_meta); the Misc
+ * toggles (disable_pages_in_search, use_classic_editor)
+ * in template-functions.php; footer.php reads show_copyright_prefix, copyright,
+ * keep_credit.
  *
  * @package Mike
  */
@@ -130,8 +140,8 @@ if ( ! function_exists( 'mike_font_inline_css' ) ) :
 
 		// Resolve each role's chosen slug to an installed family (or null = system).
 		$roles = array(
-			'heading' => get_theme_mod( 'mike_heading_font', '' ),
-			'body'    => get_theme_mod( 'mike_body_font', '' ),
+			'heading' => get_theme_mod( 'heading_font', '' ),
+			'body'    => get_theme_mod( 'body_font', '' ),
 		);
 
 		$face = '';
@@ -190,11 +200,64 @@ if ( ! function_exists( 'mike_sanitize_checkbox' ) ) :
 	}
 endif;
 
+/* 6. mike_color_inline_css - :root token overrides + ::selection for Style
+------------------------------------------------ */
+
+if ( ! function_exists( 'mike_color_inline_css' ) ) :
+	// Empty mods = theme default (no CSS emitted for that color).
+	function mike_color_inline_css() {
+		// These override :root tokens.
+		$map = array(
+			'text_color'   => '--text',
+			'accent_color' => '--accent',
+			'bg_color'     => '--bg',
+		);
+		$root = '';
+		foreach ( $map as $setting => $token ) {
+			$value = get_theme_mod( $setting, '' );
+			if ( '' !== $value ) {
+				$root .= $token . ':' . $value . ';';
+			}
+		}
+		$css = $root ? ':root{' . $root . '}' : '';
+
+		// Selection colors get a real ::selection rule, and ONLY when set — so
+		// the browser default highlight stays intact otherwise.
+		$sel    = '';
+		$sel_bg = get_theme_mod( 'selection_bg_color', '' );
+		$sel_fg = get_theme_mod( 'selection_text_color', '' );
+		if ( '' !== $sel_bg ) {
+			$sel .= 'background:' . $sel_bg . ';';
+		}
+		if ( '' !== $sel_fg ) {
+			$sel .= 'color:' . $sel_fg . ';';
+		}
+		if ( '' !== $sel ) {
+			$css .= '::selection{' . $sel . '}';
+		}
+
+		return $css;
+	}
+endif;
+
+/* 7. mike_color_enqueue - attach the color overrides to the stylesheet
+------------------------------------------------ */
+
+if ( ! function_exists( 'mike_color_enqueue' ) ) :
+	function mike_color_enqueue() {
+		$css = mike_color_inline_css();
+		if ( '' !== $css ) {
+			wp_add_inline_style( 'mike_style', $css );
+		}
+	}
+	add_action( 'wp_enqueue_scripts', 'mike_color_enqueue', 20 );
+endif;
+
 /* =============================================================================
    CONTENT (sections + options)
 ============================================================================= */
 
-/* 6. mike_customize_register - Typography + Footer sections and their controls
+/* 8. mike_customize_register - Typography, Style, Blog/Archive, Single, Footer
 ------------------------------------------------ */
 
 if ( ! function_exists( 'mike_customize_register' ) ) :
@@ -202,21 +265,21 @@ if ( ! function_exists( 'mike_customize_register' ) ) :
 
 		/* Site Identity (core section) — show/hide title + tagline
 		------------------- */
-		$wp_customize->add_setting( 'mike_show_title', array(
+		$wp_customize->add_setting( 'show_title', array(
 			'default'           => true,
 			'sanitize_callback' => 'mike_sanitize_checkbox',
 		) );
-		$wp_customize->add_control( 'mike_show_title', array(
+		$wp_customize->add_control( 'show_title', array(
 			'type'    => 'checkbox',
 			'section' => 'title_tagline',
 			'label'   => esc_html__( 'Display site title', 'mike' ),
 		) );
 
-		$wp_customize->add_setting( 'mike_show_tagline', array(
+		$wp_customize->add_setting( 'show_tagline', array(
 			'default'           => true,
 			'sanitize_callback' => 'mike_sanitize_checkbox',
 		) );
-		$wp_customize->add_control( 'mike_show_tagline', array(
+		$wp_customize->add_control( 'show_tagline', array(
 			'type'    => 'checkbox',
 			'section' => 'title_tagline',
 			'label'   => esc_html__( 'Display tagline', 'mike' ),
@@ -224,69 +287,190 @@ if ( ! function_exists( 'mike_customize_register' ) ) :
 
 		/* Typography
 		------------------- */
+		// Priorities 130-155 land all our sections after the core Menus (100) and
+		// Homepage Settings (120) sections, but before Additional CSS (200).
 		$wp_customize->add_section( 'mike_typography', array(
 			'title'       => esc_html__( 'Typography', 'mike' ),
-			'priority'    => 40,
+			'priority'    => 130,
 			'description' => esc_html__( 'Install fonts under Appearance > Fonts, then pick them here.', 'mike' ),
 		) );
 
-		$wp_customize->add_setting( 'mike_heading_font', array(
+		$wp_customize->add_setting( 'heading_font', array(
 			'default'           => '',
 			'sanitize_callback' => 'sanitize_text_field',
 		) );
-		$wp_customize->add_control( 'mike_heading_font', array(
+		$wp_customize->add_control( 'heading_font', array(
 			'type'    => 'select',
 			'section' => 'mike_typography',
 			'label'   => esc_html__( 'Heading font', 'mike' ),
 			'choices' => mike_font_choices(),
 		) );
 
-		$wp_customize->add_setting( 'mike_body_font', array(
+		$wp_customize->add_setting( 'body_font', array(
 			'default'           => '',
 			'sanitize_callback' => 'sanitize_text_field',
 		) );
-		$wp_customize->add_control( 'mike_body_font', array(
+		$wp_customize->add_control( 'body_font', array(
 			'type'    => 'select',
 			'section' => 'mike_typography',
 			'label'   => esc_html__( 'Body font', 'mike' ),
 			'choices' => mike_font_choices(),
 		) );
 
+		/* Style — colors (override the :root tokens; empty = theme default)
+		------------------- */
+		$wp_customize->add_section( 'mike_style', array(
+			'title'    => esc_html__( 'Style', 'mike' ),
+			'priority' => 135,
+		) );
+
+		$mike_colors = array(
+			'text_color'           => esc_html__( 'Text color', 'mike' ),
+			'accent_color'         => esc_html__( 'Accent color', 'mike' ),
+			'bg_color'             => esc_html__( 'Background color', 'mike' ),
+			'selection_bg_color'   => esc_html__( 'Selection color', 'mike' ),
+			'selection_text_color' => esc_html__( 'Selected text color', 'mike' ),
+		);
+		foreach ( $mike_colors as $mike_id => $mike_label ) {
+			$wp_customize->add_setting( $mike_id, array(
+				'default'           => '',
+				'sanitize_callback' => 'sanitize_hex_color',
+			) );
+			$wp_customize->add_control( new WP_Customize_Color_Control( $wp_customize, $mike_id, array(
+				'section' => 'mike_style',
+				'label'   => $mike_label,
+			) ) );
+		}
+
+		/* Blog / Archive — show/hide parts of each post in the listing
+		------------------- */
+		$wp_customize->add_section( 'mike_blog', array(
+			'title'    => esc_html__( 'Blog / Archive', 'mike' ),
+			'priority' => 140,
+		) );
+
+		$mike_blog_options = array(
+			'show_excerpt'       => esc_html__( 'Show excerpt', 'mike' ),
+			'show_excerpt_more'  => esc_html__( 'Show excerpt "(more)" link', 'mike' ),
+			'show_categories'    => esc_html__( 'Show categories', 'mike' ),
+			'show_date'          => esc_html__( 'Show date', 'mike' ),
+			'show_thumbnail'     => esc_html__( 'Show thumbnail', 'mike' ),
+			'show_comment_count' => esc_html__( 'Show comment count', 'mike' ),
+		);
+		foreach ( $mike_blog_options as $mike_id => $mike_label ) {
+			$wp_customize->add_setting( $mike_id, array(
+				'default'           => true,
+				'sanitize_callback' => 'mike_sanitize_checkbox',
+			) );
+			$wp_customize->add_control( $mike_id, array(
+				'type'    => 'checkbox',
+				'section' => 'mike_blog',
+				'label'   => $mike_label,
+			) );
+		}
+
+		// Excerpt length, in words.
+		$wp_customize->add_setting( 'excerpt_length', array(
+			'default'           => 20,
+			'sanitize_callback' => 'absint',
+		) );
+		$wp_customize->add_control( 'excerpt_length', array(
+			'type'        => 'number',
+			'section'     => 'mike_blog',
+			'label'       => esc_html__( 'Excerpt length (words)', 'mike' ),
+			'input_attrs' => array( 'min' => 5, 'max' => 200, 'step' => 1 ),
+		) );
+
+		/* Single — show/hide parts below a single post
+		------------------- */
+		$wp_customize->add_section( 'mike_single', array(
+			'title'    => esc_html__( 'Single Post', 'mike' ),
+			'priority' => 145,
+		) );
+
+		$mike_single_options = array(
+			'single_show_categories'    => esc_html__( 'Show category (top)', 'mike' ),
+			'single_show_date'          => esc_html__( 'Show date (top)', 'mike' ),
+			'single_show_comment_count' => esc_html__( 'Show comment count (top)', 'mike' ),
+			'show_tags'                 => esc_html__( 'Show tags', 'mike' ),
+			'show_comments'             => esc_html__( 'Show comments', 'mike' ),
+		);
+		foreach ( $mike_single_options as $mike_id => $mike_label ) {
+			$wp_customize->add_setting( $mike_id, array(
+				'default'           => true,
+				'sanitize_callback' => 'mike_sanitize_checkbox',
+			) );
+			$wp_customize->add_control( $mike_id, array(
+				'type'    => 'checkbox',
+				'section' => 'mike_single',
+				'label'   => $mike_label,
+			) );
+		}
+
+		/* Misc — behavior toggles (read in inc/template-functions.php)
+		------------------- */
+		$wp_customize->add_section( 'mike_misc', array(
+			'title'    => esc_html__( 'Misc', 'mike' ),
+			'priority' => 155,
+		) );
+
+		// Exclude pages from search results (on by default).
+		$wp_customize->add_setting( 'disable_pages_in_search', array(
+			'default'           => true,
+			'sanitize_callback' => 'mike_sanitize_checkbox',
+		) );
+		$wp_customize->add_control( 'disable_pages_in_search', array(
+			'type'    => 'checkbox',
+			'section' => 'mike_misc',
+			'label'   => esc_html__( 'Disable pages in search results', 'mike' ),
+		) );
+
+		// Force the classic editor (off by default → block editor).
+		$wp_customize->add_setting( 'use_classic_editor', array(
+			'default'           => false,
+			'sanitize_callback' => 'mike_sanitize_checkbox',
+		) );
+		$wp_customize->add_control( 'use_classic_editor', array(
+			'type'    => 'checkbox',
+			'section' => 'mike_misc',
+			'label'   => esc_html__( 'Use classic editor', 'mike' ),
+		) );
+
 		/* Footer
 		------------------- */
 		$wp_customize->add_section( 'mike_footer', array(
 			'title'    => esc_html__( 'Footer', 'mike' ),
-			'priority' => 90,
+			'priority' => 150,
 		) );
 
 		// Prefix: "© YEAR Site name".
-		$wp_customize->add_setting( 'mike_show_copyright_prefix', array(
+		$wp_customize->add_setting( 'show_copyright_prefix', array(
 			'default'           => true,
 			'sanitize_callback' => 'mike_sanitize_checkbox',
 		) );
-		$wp_customize->add_control( 'mike_show_copyright_prefix', array(
+		$wp_customize->add_control( 'show_copyright_prefix', array(
 			'type'    => 'checkbox',
 			'section' => 'mike_footer',
-			'label'   => esc_html__( 'Show © year + site name', 'mike' ),
+			'label'   => esc_html__( 'Show © + year', 'mike' ),
 		) );
 
 		// Main copyright line.
-		$wp_customize->add_setting( 'mike_copyright', array(
-			'default'           => esc_html__( 'All rights reserved.', 'mike' ),
+		$wp_customize->add_setting( 'copyright', array(
+			'default'           => '',
 			'sanitize_callback' => 'wp_kses_post',
 		) );
-		$wp_customize->add_control( 'mike_copyright', array(
+		$wp_customize->add_control( 'copyright', array(
 			'type'    => 'textarea',
 			'section' => 'mike_footer',
 			'label'   => esc_html__( 'Copyright text', 'mike' ),
 		) );
 
-		// Theme credit ("made with ♥ by Mike").
-		$wp_customize->add_setting( 'mike_keep_credit', array(
+		// Theme credit
+		$wp_customize->add_setting( 'keep_credit', array(
 			'default'           => true,
 			'sanitize_callback' => 'mike_sanitize_checkbox',
 		) );
-		$wp_customize->add_control( 'mike_keep_credit', array(
+		$wp_customize->add_control( 'keep_credit', array(
 			'type'    => 'checkbox',
 			'section' => 'mike_footer',
 			'label'   => esc_html__( 'Keep theme credit', 'mike' ),

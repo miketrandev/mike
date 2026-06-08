@@ -8,7 +8,7 @@ Description: Mike is a personal & blog wordpress theme with minimalist style, ze
 Requires at least: 7.0
 Tested up to: 7.0
 Requires PHP: 7.4
-Version: 1.0
+Version: 1.05
 License: GNU General Public License v2 or later
 License URI: https://www.gnu.org/licenses/gpl-2.0.html
 Text Domain: mike
@@ -368,16 +368,21 @@ TABLE OF CONTENTS
   --body-font: sans-serif;
   --heading-font: sans-serif;
   --accent: rgb(0, 0, 238);
-  --gray: #999;
+  --gray: #767676; /* AA contrast (4.5:1) on white - used only as muted text */
   --dark-gray: #555;
   --dark: #111;
+  /* themeable colors - overridable from the customizer Style section.
+     (Selection colors aren't tokens: the customizer emits a ::selection
+     rule only when they're set, so there's no default highlight override.) */
+  --text: var(--dark); /* body text */
+  --bg: white; /* page background */
   --border: rgba(0,0,0,.07);
   /* spacing scale - adjust here to retune rhythm everywhere (e.g. on mobile) */
-  --spacing: 2em; /* default gap between flowing elements */
-  --spacing-md: 2.5em; /* heading rhythm */
-  --spacing-lg: 3em; /* between minor sections */
-  --spacing-xl: 4em; /* between major sections */
-  --spacing-2xl: 6em; /* page-level breathing room */
+  --spacing: 1.4em; /* default gap between flowing elements */
+  --spacing-md: 2em; /* heading rhythm */
+  --spacing-lg: 2.8em; /* between minor sections */
+  --spacing-xl: 3.4em; /* between major sections */
+  --spacing-2xl: 4.8em; /* page-level breathing room */
 }
 
 /* tablet & phone - tighten the whole spacing scale in one place */
@@ -388,6 +393,17 @@ TABLE OF CONTENTS
     --spacing-lg: 2em;
     --spacing-xl: 2.5em;
     --spacing-2xl: 3.5em;
+  }
+}
+/* reduced motion - honor the OS "reduce motion" setting */
+@media (prefers-reduced-motion: reduce) {
+  *,
+  *:before,
+  *:after {
+    animation-duration: 0.01ms !important;
+    animation-iteration-count: 1 !important;
+    transition-duration: 0.01ms !important;
+    scroll-behavior: auto !important;
   }
 }
 /* 1. general
@@ -402,7 +418,8 @@ html *:after {
 }
 
 body {
-  background-color: white;
+  background-color: var(--bg);
+  color: var(--text);
   font-family: var(--body-font);
   font-size: 16px;
   line-height: 1.5;
@@ -412,10 +429,6 @@ h1, h2, h3, h4, h5, h6 {
   font-family: var(--heading-font);
   line-height: 1.2;
   font-weight: 600;
-}
-
-h1 {
-  font-size: 1.8em;
 }
 
 img {
@@ -444,6 +457,17 @@ a {
   color: var(--accent);
 }
 
+/* visible keyboard focus on every interactive element */
+a:focus-visible,
+button:focus-visible,
+input:focus-visible,
+textarea:focus-visible,
+select:focus-visible,
+[tabindex]:focus-visible {
+  outline: 2px solid var(--accent);
+  outline-offset: 2px;
+}
+
 /* screen-reader-text - visible to assistive tech only (standard WP class) */
 .screen-reader-text {
   position: absolute;
@@ -455,6 +479,22 @@ a {
   clip: rect(0, 0, 0, 0);
   white-space: nowrap;
   border: 0;
+}
+
+/* but reveal it when focused - so skip links work for keyboard users */
+.screen-reader-text:focus {
+  position: fixed;
+  top: 8px;
+  left: 8px;
+  z-index: 100000;
+  width: auto;
+  height: auto;
+  margin: 0;
+  padding: 12px 18px;
+  clip: auto;
+  background: var(--bg);
+  color: var(--text);
+  box-shadow: 0 0 0 2px var(--accent);
 }
 
 /* 1.1 form
@@ -728,12 +768,12 @@ figcaption {
 
 .site-identity {
   display: flex;
-  align-items: center;
+  flex-direction: column; /* title above, tagline below */
 }
 
 .site-title {
   margin: 0;
-  font-size: 1.3em;
+  font-size: 1.2em;
   font-weight: 600;
   font-family: var(--heading-font);
   line-height: 1.1;
@@ -747,13 +787,9 @@ figcaption {
 .site-tagline {
   display: inline;
   margin: 0;
-  font-size: 0.85rem;
+  font-size: 0.85em;
   color: var(--gray);
   line-height: 1.3;
-}
-.site-tagline::before {
-  content: "·";
-  margin: 0 5px;
 }
 
 @media (max-width: 767.98px) {
@@ -792,7 +828,6 @@ figcaption {
   padding: 0;
   list-style: none;
   font-family: var(--heading-font);
-  color: var(--gray);
 }
 .site-header .primary-nav .menu > li {
   display: block;
@@ -810,7 +845,7 @@ figcaption {
 .site-header .primary-nav .menu > li.current-menu-item > a,
 .site-header .primary-nav .menu > li.current-menu-ancestor > a,
 .site-header .primary-nav .menu > li:hover > a {
-  color: var(--dark);
+  text-decoration: underline;
 }
 .site-header .primary-nav .menu {
   /* caret on items that have a submenu */
@@ -828,16 +863,15 @@ figcaption {
   top: 100%;
   left: 0;
   width: 160px;
-  background: white;
-  box-shadow: 2px 3px 20px rgba(0, 0, 0, 0.1);
-  border-radius: 1px;
+  background: var(--bg);
   list-style: none;
   margin: 0;
   padding: 0;
   border: 1px solid var(--border);
-  font-size: 0.9em;
-  border-radius: 3px;
-  padding: 12px;
+  padding: 0.5em 1em;
+}
+.site-header .primary-nav .menu ul > li + li > a {
+  border-top: 1px solid var(--border);
 }
 .site-header .primary-nav .menu ul ul {
   left: 100%;
@@ -845,16 +879,16 @@ figcaption {
 }
 .site-header .primary-nav .menu ul a {
   display: block;
-  padding: 8px 10px;
+  padding: 6px 0;
   line-height: 20px;
-  color: var(--dark);
 }
 .site-header .primary-nav .menu ul > li.current-menu-item > a,
 .site-header .primary-nav .menu ul > li.current-menu-ancestor > a,
 .site-header .primary-nav .menu ul > li:hover > a {
-  color: var(--dark);
+  opacity: 0.5;
 }
-.site-header .primary-nav .menu li:hover > ul {
+.site-header .primary-nav .menu li:hover > ul,
+.site-header .primary-nav .menu li:focus-within > ul {
   display: block;
 }
 
@@ -942,14 +976,12 @@ figcaption {
 
 /* 4. footer
 -------------------------------------------- */
-.site-footer {
+.site-footer .reading {
   padding: var(--spacing-2xl) 0;
-  font-size: 0.9em;
+  margin-top: var(--spacing-2xl);
+  border-top: 1px solid var(--border);
 }
 
-.copyright {
-  color: var(--gray);
-}
 .copyright a {
   text-decoration: none;
 }
@@ -959,12 +991,8 @@ figcaption {
 .copyright p {
   margin: 0;
 }
-.copyright .heart {
-  color: #e25555;
-}
-
 .footer-nav {
-  margin-top: 0.5em;
+  margin-bottom: 0.5em;
 }
 
 .footer-nav .menu {
@@ -976,14 +1004,16 @@ figcaption {
   list-style: none;
 }
 .footer-nav .menu a {
-  color: var(--gray);
+  color: inherit;
   text-decoration: none;
 }
 .footer-nav .menu a:hover {
-  color: var(--dark);
+  text-decoration: underline;
 }
 .footer-nav .menu .current-menu-item > a {
-  color: var(--dark-gray);
+  color: var(--gray);
+  text-decoration: none;
+  cursor: default;
 }
 
 /* 5. blog - archive
@@ -1004,6 +1034,9 @@ figcaption {
 .archive-header h1 {
   margin: 0;
 }
+.archive-header form {
+  margin-top: var(--spacing);
+}
 
 .archive-heading {
   display: flex;
@@ -1021,7 +1054,6 @@ figcaption {
   font-size: 1.1em;
   line-height: 1.3;
   margin-top: 0.2em;
-  max-width: 400px;
 }
 @media (max-width: 767.98px) {
   .archive-description {
@@ -1061,7 +1093,6 @@ figcaption {
 
 .entry-title {
   margin: 0;
-  font-size: 1.5em;
 }
 .entry-title a {
   color: inherit;
@@ -1082,7 +1113,12 @@ figcaption {
 }
 .entry-summary a {
   text-decoration: none;
+  white-space: nowrap;
 }
+.entry-summary a:hover {
+  text-decoration: underline;
+}
+
 .entry-meta {
   display: flex;
   align-items: center;
@@ -1114,7 +1150,6 @@ figcaption {
 }
 .entry-comments .mike-icon {
   /* nudge the bubble to sit on the text baseline */
-  margin-bottom: -2px;
 }
 
 .entry-categories .entry-categories-sep {
@@ -1149,13 +1184,7 @@ figcaption {
 /* pagination
 ------------------- */
 .pagination {
-  margin: var(--spacing-2xl) 0 0;
-  font-size: 1.1875em;
-}
-@media (max-width: 767.98px) {
-  .pagination {
-    font-size: 1em;
-  }
+  padding: var(--spacing-xl) 0 0;
 }
 .pagination a {
   text-decoration: none;
@@ -1185,7 +1214,7 @@ figcaption {
 }
 
 .single-header {
-  padding: 1em 0 var(--spacing-lg);
+  padding: var(--spacing-lg) 0 var(--spacing-lg);
 }
 @media (max-width: 767.98px) {
   .single-header {
@@ -1207,8 +1236,19 @@ figcaption {
   margin-top: var(--spacing);
   margin-bottom: 0;
 }
+.entry-content > .wp-block-image {
+  padding-top: 0.5em;
+  padding-bottom: 0.5em;
+}
 .entry-content > *:first-child {
   margin-top: 0;
+}
+.entry-content {
+  /* separator block - a single hairline rule */
+}
+.entry-content .wp-block-separator {
+  border: 0;
+  border-top: 1px solid var(--border);
 }
 .entry-content {
   /* alignwide / alignfull - break out only when the screen is wide enough */
@@ -1262,8 +1302,6 @@ figcaption {
   margin: 0;
 }
 .entry-content blockquote cite {
-  font-family: monospace;
-  font-size: 14px;
   font-style: normal;
   display: block;
   margin-top: 1em;
@@ -1288,7 +1326,12 @@ figcaption {
 /* comments
 ------------------- */
 #comments {
-  margin-top: var(--spacing);
+  margin-top: var(--spacing-lg);
+  padding-top: var(--spacing-lg);
+  border-top: 1px solid var(--border);
+}
+#comments #respond:first-child {
+  padding-top: 0;
 }
 
 .comments-title {

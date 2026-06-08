@@ -3,7 +3,10 @@ ref/
 dev/
 
 # Build output
-mike-v*.zip
+mike-*.zip
+
+# README screenshots not meant to ship
+readme-images/
 
 # Claude / AI working files
 CLAUDE.md

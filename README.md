@@ -1,11 +1,13 @@
 # Mike - Free lighweight WordPress theme
 
-A tiny WordPress theme (~18kb zip): no JavaScript, no page builder, no Google fonts, ~15 KB of compressed CSS, 99/100 Lighthouse ([test it](https://pagespeed.web.dev/?url=mike-demo.miketran.net)).
+A tiny WordPress theme (~18kb zip): no JavaScript, no page builder, no Google fonts, ~15 KB of compressed CSS, 99/100 Lighthouse ([test it](https://pagespeed.web.dev/analysis/https-mike-demo-miketran-net/motph3kaqv?form_factor=mobile)).
 
 Demo: [mike-demo.miketran.net](https://mike-demo.miketran.net)
 Download: [mike.zip](https://github.com/miketrandev/mike/releases/latest/download/mike.zip)
 
 Install: in WordPress, go to Appearance → Themes → Add New → Upload Theme, choose `mike.zip`, then Install and Activate.
+
+![hero image](readme-images/hero1.jpg)
 
 ## Contents
 
