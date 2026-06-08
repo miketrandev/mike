@@ -9,8 +9,8 @@ the front end, so what the writer sees matches what readers get.
 
 TABLE OF CONTENTS
 --------------------------------------------
-1. variables   - --reading + colours, mirrored from style.scss
-2. width       - constrain blocks to --reading
+1. variables   - --reading + --wide + colours, mirrored from style.scss
+2. width       - constrain blocks to --reading, wide blocks to --wide
 3. typography  - headings, body, links
 4. media       - image alignment + caption
 */
@@ -18,13 +18,14 @@ TABLE OF CONTENTS
 -------------------------------------------- */
 :root {
   --reading: 640px;
+  --wide: 900px;
   --body-font: sans-serif;
   --heading-font: sans-serif;
   --accent: rgb(0, 0, 238);
   --gray: #999;
   --dark: #111;
   --border: rgba(0,0,0,.07);
-  --spacing: 2em; /* default gap between flowing elements */
+  --spacing: 1em; /* default gap between flowing elements */
 }
 
 /* 2. width
@@ -33,11 +34,19 @@ TABLE OF CONTENTS
   max-width: var(--reading);
 }
 
+.wp-block[data-align=wide] {
+  max-width: var(--wide);
+}
+
+.wp-block[data-align=full] {
+  max-width: none;
+}
+
 /* 3. typography
 -------------------------------------------- */
 .editor-styles-wrapper {
   font-family: var(--body-font);
-  font-size: 19px;
+  font-size: 16px;
   line-height: 1.5;
   color: var(--dark);
 }

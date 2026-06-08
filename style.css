@@ -8,7 +8,7 @@ Description: Mike is a personal & blog wordpress theme with minimalist style, ze
 Requires at least: 7.0
 Tested up to: 7.0
 Requires PHP: 7.4
-Version: 1.08
+Version: 1.092
 License: GNU General Public License v2 or later
 License URI: https://www.gnu.org/licenses/gpl-2.0.html
 Text Domain: mike
@@ -1223,8 +1223,10 @@ figcaption {
 }
 
 .entry-content {
-  font-size: 1.1875em;
   overflow-wrap: break-word; /* break long URLs so they don't overflow */
+}
+.entry-content:first-child {
+  padding-top: 2em;
 }
 .entry-content a:hover {
   text-decoration: none;
@@ -1288,6 +1290,33 @@ figcaption {
 }
 .entry-content li + li {
   margin-top: 0.5em;
+}
+.entry-content {
+  /* inline code - a word or phrase set in monospace */
+}
+.entry-content code {
+  font-family: monospace;
+  font-size: 0.9em;
+  padding: 0.15em 0.4em;
+  background: rgba(0, 0, 0, 0.05);
+  border-radius: 2px;
+}
+.entry-content {
+  /* code block - scrollable, no double background on the inner code */
+}
+.entry-content pre {
+  font-family: monospace;
+  font-size: 0.9em;
+  line-height: 1.5;
+  padding: 1em 1.2em;
+  overflow-x: auto;
+  background: rgba(0, 0, 0, 0.05);
+  border-radius: 2px;
+}
+.entry-content pre code {
+  padding: 0;
+  background: none;
+  border-radius: 0;
 }
 .entry-content {
   /* blockquote - set off from the body */
