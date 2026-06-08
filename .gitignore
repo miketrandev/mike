@@ -5,9 +5,6 @@ dev/
 # Build output
 mike-*.zip
 
-# README screenshots not meant to ship
-readme-images/
-
 # Claude / AI working files
 CLAUDE.md
 coding-style.md
