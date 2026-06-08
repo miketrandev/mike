@@ -7,6 +7,7 @@ A tiny WordPress theme (~68kb zip) you can download for free. No JavaScript, no 
 - Description page: [miketran.net/mike](https://miketran.net/mike)
 - Docs: [mike/docs](https://miketran.net/mike/docs/)
 - [Changelog](https://miketran.net/mike/#changelog)
+- Current version: v1.1 (released Jun 08, 2026)
 
 ![mike screenshot](resources/mike-screenshot.jpg)
 
@@ -14,7 +15,7 @@ A tiny WordPress theme (~68kb zip) you can download for free. No JavaScript, no 
 
 99/100 Lighthouse, you can ([test it yourself](https://pagespeed.web.dev/analysis?url=https%3A%2F%2Fmike-demo.miketran.net%2F)).
 
-![mike page speed](resources/page-speed.jpg)
+![mike page speed](resources/mike-speed.jpg)
 
 The setting for this speed:
 - No google analytics. If you have GA code, it'll be slower, ~ 88/100. If you use Litespeed cache, it's back to 99/100.
