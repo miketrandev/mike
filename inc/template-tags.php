@@ -1,4 +1,5 @@
 <?php
+// hey there
 /**
  * Template tags — presentational helpers used across theme templates.
  *
