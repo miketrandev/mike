@@ -1,0 +1,306 @@
+# Copyright (C) 2026 Mike Tran
+# This file is distributed under the GNU General Public License v2 or later.
+msgid ""
+msgstr ""
+"Project-Id-Version: Mike 1.1\n"
+"Report-Msgid-Bugs-To: https://miketran.net/mike\n"
+"POT-Creation-Date: 2026-05-01T00:00:00+00:00\n"
+"MIME-Version: 1.0\n"
+"Content-Type: text/plain; charset=UTF-8\n"
+"Content-Transfer-Encoding: 8bit\n"
+"PO-Revision-Date: YEAR-MO-DA HO:MI+ZONE\n"
+"Last-Translator: FULL NAME <EMAIL@ADDRESS>\n"
+"Language-Team: LANGUAGE <LL@li.org>\n"
+"Language: \n"
+"Plural-Forms: nplurals=2; plural=(n != 1);\n"
+"X-Domain: mike\n"
+
+#: comments.php:32
+msgid "%s Comment"
+msgid_plural "%s Comments"
+msgstr[0] ""
+msgstr[1] ""
+
+#: comments.php:51
+msgid "Older comments"
+msgstr ""
+
+#: comments.php:52
+msgid "Newer comments"
+msgstr ""
+
+#: comments.php:55
+msgid "Comments navigation"
+msgstr ""
+
+#: comments.php:65
+msgid "Comments are closed."
+msgstr ""
+
+#: comments.php:73
+msgid "Leave a comment"
+msgstr ""
+
+#. translators: %s: comment author name.
+#: comments.php:74
+msgid "Reply to %s"
+msgstr ""
+
+#: comments.php:78
+msgid "Comment"
+msgstr ""
+
+#: comments.php:79
+msgid "Join the discussion…"
+msgstr ""
+
+#: footer.php:18
+msgid "Footer menu"
+msgstr ""
+
+#. translators: %s: theme name link.
+#: footer.php:39
+msgid "Built with %s"
+msgstr ""
+
+#: footer.php:40
+msgid "Build a site like this"
+msgstr ""
+
+#: functions.php:51
+msgid "Primary Menu"
+msgstr ""
+
+#: functions.php:52
+msgid "Footer Menu"
+msgstr ""
+
+#: header.php:24
+msgid "Skip to the content"
+msgstr ""
+
+#: header.php:25
+msgid "Skip to the main menu"
+msgstr ""
+
+#: header.php:42
+msgid "Open menu"
+msgstr ""
+
+#: header.php:57
+msgid "Menu"
+msgstr ""
+
+#: header.php:59
+msgid "Close menu"
+msgstr ""
+
+#: inc/admin.php:30
+msgid "Page options"
+msgstr ""
+
+#: inc/admin.php:50
+msgid "Hide page title?"
+msgstr ""
+
+#: inc/customizer.php:54
+msgid "System default (fastest)"
+msgstr ""
+
+#: inc/customizer.php:275
+msgid "Display site title"
+msgstr ""
+
+#: inc/customizer.php:285
+msgid "Display tagline"
+msgstr ""
+
+#: inc/customizer.php:293
+msgid "Typography"
+msgstr ""
+
+#: inc/customizer.php:295
+msgid "Install fonts under Appearance > Fonts, then pick them here."
+msgstr ""
+
+#: inc/customizer.php:305
+msgid "Heading font"
+msgstr ""
+
+#: inc/customizer.php:316
+msgid "Body font"
+msgstr ""
+
+#: inc/customizer.php:323
+msgid "Style"
+msgstr ""
+
+#: inc/customizer.php:328
+msgid "Text color"
+msgstr ""
+
+#: inc/customizer.php:329
+msgid "Accent color"
+msgstr ""
+
+#: inc/customizer.php:330
+msgid "Background color"
+msgstr ""
+
+#: inc/customizer.php:331
+msgid "Selection color"
+msgstr ""
+
+#: inc/customizer.php:332
+msgid "Selected text color"
+msgstr ""
+
+#: inc/customizer.php:348
+msgid "Blog / Archive"
+msgstr ""
+
+#: inc/customizer.php:353
+msgid "Show excerpt"
+msgstr ""
+
+#: inc/customizer.php:354
+msgid "Show excerpt \"(more)\" link"
+msgstr ""
+
+#: inc/customizer.php:355
+msgid "Show categories"
+msgstr ""
+
+#: inc/customizer.php:356
+msgid "Show date"
+msgstr ""
+
+#: inc/customizer.php:357
+msgid "Show thumbnail"
+msgstr ""
+
+#: inc/customizer.php:358
+msgid "Show comment count"
+msgstr ""
+
+#: inc/customizer.php:380
+msgid "Excerpt length (words)"
+msgstr ""
+
+#: inc/customizer.php:387
+msgid "Single Post"
+msgstr ""
+
+#: inc/customizer.php:392
+msgid "Show category (top)"
+msgstr ""
+
+#: inc/customizer.php:393
+msgid "Show date (top)"
+msgstr ""
+
+#: inc/customizer.php:394
+msgid "Show comment count (top)"
+msgstr ""
+
+#: inc/customizer.php:395
+msgid "Show tags"
+msgstr ""
+
+#: inc/customizer.php:396
+msgid "Show comments"
+msgstr ""
+
+#: inc/customizer.php:413
+msgid "Misc"
+msgstr ""
+
+#: inc/customizer.php:425
+msgid "Disable pages in search results"
+msgstr ""
+
+#: inc/customizer.php
+msgid "Enhanced menu keyboard support"
+msgstr ""
+
+#: inc/customizer.php
+msgid "Adds Esc-to-close and focus-trapping to the mobile menu (loads a tiny script)."
+msgstr ""
+
+#: inc/customizer.php
+msgid "Footer"
+msgstr ""
+
+#: inc/customizer.php:454
+msgid "Show © + year"
+msgstr ""
+
+#: inc/customizer.php:465
+msgid "Copyright text"
+msgstr ""
+
+#: inc/customizer.php:476
+msgid "Keep theme credit"
+msgstr ""
+
+#: inc/template-functions.php:37
+msgid "(more)"
+msgstr ""
+
+#: inc/template-tags.php:36
+msgid "Primary menu"
+msgstr ""
+
+#: inc/template-tags.php:64
+msgid "Mobile menu"
+msgstr ""
+
+#: inc/template-tags.php:84
+msgid "Tags"
+msgstr ""
+
+#: inc/template-tags.php:85
+msgid "Tags:"
+msgstr ""
+
+#: inc/template-tags.php:113
+msgid "Categories"
+msgstr ""
+
+#: index.php:32
+msgid "Previous"
+msgstr ""
+
+#: index.php:33
+msgid "Next"
+msgstr ""
+
+#: index.php:34
+msgid "Posts navigation"
+msgstr ""
+
+#: index.php:40
+msgid "Nothing found."
+msgstr ""
+
+#: singular.php:29
+msgid "Pages"
+msgstr ""
+
+#. translators: %s: search query.
+#: template-parts/archive-header.php:18
+msgid "Search results for: %s"
+msgstr ""
+
+#: template-parts/archive-header.php:20
+msgid "Nothing found"
+msgstr ""
+
+#: template-parts/archive-header.php:21
+msgid "That page could not be found. Try a search instead."
+msgstr ""
+
+#. translators: %d: page number.
+#: template-parts/archive-header.php:51
+msgid "Page %d"
+msgstr ""

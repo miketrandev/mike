@@ -2,18 +2,17 @@
 
 /*
 Theme Name: Mike
-Theme URI: https://miketran.net
-Author: Mike
+Author: Mike Tran
 Author URI: https://miketran.net
-Description: Mike is a personal & blog wordpress theme with minimalist style, zero js, loads ultra fast
-Requires at least: 7.0
+Description: Mike is a personal & blog WordPress theme with minimalist style, almost no JavaScript, and ultra-fast load.
+Requires at least: 6.5
 Tested up to: 7.0
 Requires PHP: 7.4
-Version: 1.1
+Version: 1.2
 License: GNU General Public License v2 or later
 License URI: https://www.gnu.org/licenses/gpl-2.0.html
 Text Domain: mike
-Tags: blog, custom-logo, custom-menu, featured-images, threaded-comments, translation-ready
+Tags: blog, one-column, custom-colors, editor-style, theme-options, custom-logo, custom-menu, featured-images, threaded-comments, translation-ready
 */
 
 @use "scss/mixins" as *;
@@ -136,6 +135,10 @@ h1, h2, h3, h4, h5, h6 {
 
 a {
     color: var(--accent);
+}
+
+hr {
+    border-top: 1px solid var(--border);
 }
 
 /* visible keyboard focus on every interactive element */
@@ -282,7 +285,6 @@ figcaption {
     margin-top: 0.5em;
     font-size: 0.85em;
     color: var(--gray);
-    // text-align: center;
 }
 
 /* gallery - classic [gallery] shortcode, columns set the grid */
@@ -398,7 +400,6 @@ figcaption {
 
 .site-identity {
     display: flex;
-    // align-items: center;
     flex-direction: column; /* title above, tagline below */
 }
 
@@ -461,7 +462,6 @@ figcaption {
     padding: 0;
     list-style: none;
     font-family: var(--heading-font);
-    // color: var(--gray);
 
     > li {
         display: block;
@@ -481,7 +481,6 @@ figcaption {
     > li.current-menu-ancestor,
     > li:hover {
         > a {
-            // color: var(--dark);
             text-decoration: underline;
         }
     }
@@ -502,16 +501,12 @@ figcaption {
         left: 0;
         width: 160px;
         background: var(--bg);
-        // box-shadow: 2px 3px 20px rgba(0,0,0,.1);
-        // border-radius: 1px;
 
         list-style: none;
         margin: 0;
         padding: 0;
 
-        // padding: 14px;
         border: 1px solid var(--border);
-        // font-size: 0.9em;
         padding: 0.5em 1em;
 
         > li + li > a {
@@ -527,15 +522,12 @@ figcaption {
             display: block;
             padding: 6px 0;
             line-height: 20px;
-            // color: var(--dark);
         }
         > li.current-menu-item,
         > li.current-menu-ancestor,
         > li:hover {
             > a {
                 opacity: 0.5;
-                // text-decoration: underline;
-                // color: var(--dark);
             }
         }
     }
@@ -547,13 +539,19 @@ figcaption {
 
 /* off-canvas menu (mobile, opened by the hamburger)
 ------------------- */
+/* Closed by default; the .is-open class (toggled by inline onclick) slides it
+   in. We use visibility + opacity, not display:none, so the slide transition
+   runs with zero JS — no requestAnimationFrame needed. */
 .header-offcanvas {
     position: fixed;
     inset: 0;
     z-index: 1000;
+    visibility: hidden;
+    transition: visibility 0s linear 0.25s; /* delay hiding until panel slid out */
 }
-.header-offcanvas[hidden] {
-    display: none;
+.header-offcanvas.is-open {
+    visibility: visible;
+    transition-delay: 0s;
 }
 
 .header-offcanvas__backdrop {
@@ -625,7 +623,6 @@ figcaption {
 /* 4. footer
 -------------------------------------------- */
 .site-footer {
-    // font-size: 0.9em;
 }
 .site-footer .reading {
     padding: var(--spacing-2xl) 0;
@@ -633,13 +630,10 @@ figcaption {
     border-top: 1px solid var(--border);
 }
 .copyright {
-    // color: var(--gray);
 
     a {
-        // color: inherit;
         text-decoration: none;
         &:hover {
-            // color: var(--dark-gray);
             text-decoration: underline;
         }
     }
@@ -647,7 +641,6 @@ figcaption {
         margin: 0;
     }
     .heart {
-        // color: #e25555;
     }
 }
 .footer-nav {
@@ -663,12 +656,10 @@ figcaption {
 
 
     a {
-        // color: var(--gray);
         color: inherit;
         text-decoration: none;
         &:hover {
             text-decoration: underline;
-            // color: var(--dark);
         }
     }
     .current-menu-item > a {
@@ -712,10 +703,8 @@ figcaption {
 }
 .archive-description {
     font-size: 1.1em;
-    // color: var(--gray);
     line-height: 1.3;
     margin-top: 0.2em;
-    // max-width: 400px;
 
     @include below(tablet) {
         font-size: 1em;
@@ -733,15 +722,17 @@ figcaption {
 }
 .mike-entry + .mike-entry {
     margin-top: var(--spacing-2xl);
-    // padding-top: 2em;
-    // border-top: 1px solid var(--border);
 }
 
 .mike-entry {
-    // display: flex;
     align-items: flex-start;
     gap: 20px;
     position: relative;
+
+    &.sticky {
+        padding: var(--spacing);
+        background: rgba(0, 0, 0, .03);
+    }
 }
 
 .entry-body {
@@ -757,16 +748,16 @@ figcaption {
 
 .entry-title {
     margin: 0;
-
-    @include below(tablet) {
-    }
+    /* Break a very long single word so it can't overflow the column. */
+    word-wrap: break-word;
+    overflow-wrap: break-word;
+    word-break: break-word;
 
     a {
         color: inherit;
         text-decoration: none;
         transition: all .1s;
         &:hover {
-            // color: var(--dark-gray);
             text-decoration: underline;
         }
     }
@@ -775,7 +766,8 @@ figcaption {
 .entry-summary {
     margin-top: 1em;
     overflow-wrap: break-word; /* break long URLs so they don't overflow */
-    word-break: break-all;
+    -ms-word-wrap: break-word;
+    word-wrap: break-word;
     p {
         margin: 0;
     }
@@ -783,10 +775,8 @@ figcaption {
     a {
         text-decoration: none;
         white-space: nowrap;
-        // color: var(--dark-gray);
         &:hover {
             text-decoration: underline;
-            // color: var(--dark);
         }
     }
 }
@@ -823,14 +813,22 @@ figcaption {
 
     .mike-icon {
         /* nudge the bubble to sit on the text baseline */
-        // margin-bottom: -2px;
-        // margin-top: -2px;
     }
 }
 .entry-categories {
+    /* It's a flex item in .entry-meta; min-width:0 lets a long category
+       list wrap onto more lines instead of overflowing the row. */
+    min-width: 0;
+    overflow-wrap: break-word;
+    word-wrap: break-word;
+    word-break: break-word;
+
     .entry-categories-sep {
         margin: 0 4px;
         opacity: 0.5;
+    }
+    a {
+        white-space: nowrap;
     }
 }
 
@@ -886,6 +884,10 @@ figcaption {
 }
 .single-title {
     margin: 0;
+    /* Break a very long single word so it can't overflow the column. */
+    word-wrap: break-word;
+    overflow-wrap: break-word;
+    word-break: break-word;
 }
 .single-header {
     padding: var(--spacing-lg) 0 var(--spacing-lg);
@@ -895,9 +897,14 @@ figcaption {
     }
 }
 
+.wp-block-group__inner-container,
+.wp-block-cover__inner-container {
+    > *:last-child {
+        margin-bottom: 0;
+    }
+}
 
 .entry-content {
-    // font-size: 1.1875em;
     overflow-wrap: break-word; /* break long URLs so they don't overflow */
 
     &:first-child {
@@ -1018,9 +1025,12 @@ figcaption {
     color: var(--gray);
     border-top: 1px solid var(--border);
     padding-top: var(--spacing-lg);
+    word-wrap: break-word;
+    word-break: break-word;
+
     a {
-        // color: inherit;
         text-decoration: none;
+        white-space: nowrap;
         &:hover {
             text-decoration: underline;
         }
@@ -1066,10 +1076,6 @@ figcaption {
     padding-bottom: var(--spacing);
     border-bottom: 1px solid var(--border);
 }
-// li.comment:last-child .comment-body {
-//     border-bottom: 0;
-//     padding-bottom: 0;
-// }
 
 /* author row - [ avatar | name above, date below ]
    WP nests .avatar+.fn inside .comment-author, with .comment-metadata as a
@@ -1164,8 +1170,6 @@ figcaption {
 /* the reply form */
 #respond {
     padding-top: var(--spacing);
-    // margin-top: var(--spacing);
-    // border-top: 1px solid var(--border);
 }
 .comment-respond {
     margin-top: var(--spacing-lg);
