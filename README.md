@@ -1,3 +1,8 @@
+> [!IMPORTANT]
+> **This theme has been renamed to Stoat.**
+> "Mike" was not an accepted theme name on WordPress.org, so the theme is now published as **Stoat** and has moved to a new repository.
+> 👉 Continue at **https://github.com/withemes/stoat**
+
 # Mike - Lighweight WordPress theme
 
 A tiny WordPress theme (~68kb zip) you can download for free. No JavaScript, no page builder, no Google fonts, ~15 KB of compressed CSS, 
